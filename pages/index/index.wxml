@@ -1,0 +1,204 @@
+<scroll-view class="container" scroll-y enhanced show-scrollbar="{{false}}" bindscroll="onPageScroll">
+  
+  <!-- ====== HERO 区域 ====== -->
+  <view class="hero-section">
+    <view class="hero-bg-grid"></view>
+    <view class="hero-content">
+      <text class="hero-greeting">// WELCOME TO</text>
+      <text class="hero-title">鲁力铭</text>
+      <text class="hero-motto">大鹏一日同风起，扶摇直上九万里</text>
+
+    </view>
+    <view class="hero-decoration">
+      <view class="deco-line line1"></view>
+      <view class="deco-line line2"></view>
+      <view class="deco-dot dot1"></view>
+      <view class="deco-dot dot2"></view>
+    </view>
+  </view>
+
+
+
+  <!-- ====== 内容分类 ====== -->
+  <view class="section category-section">
+    <view class="category-grid">
+      <view class="category-card" bindtap="goToCategory" data-type="article">
+        <view class="category-icon-wrapper">
+          <text class="category-icon">📝</text>
+        </view>
+        <text class="category-name">文章</text>
+        <text class="category-count">6 篇</text>
+      </view>
+      <view class="category-card" bindtap="goToCategory" data-type="album">
+        <view class="category-icon-wrapper">
+          <text class="category-icon">📷</text>
+        </view>
+        <text class="category-name">相册</text>
+        <text class="category-count">2 组</text>
+      </view>
+      <view class="category-card" bindtap="goToCategory" data-type="video">
+        <view class="category-icon-wrapper">
+          <text class="category-icon">🎬</text>
+        </view>
+        <text class="category-name">视频</text>
+        <text class="category-count">3 个</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- ====== 照片模块 ====== -->
+  <view class="section photo-section">
+    <view class="section-header">
+      <text class="section-icon">◈</text>
+      <text class="section-title">PHOTO FRAME</text>
+      <view class="section-line"></view>
+    </view>
+    <view class="photo-card" bindtap="previewImage">
+      <image 
+        class="photo-img" 
+        src="https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?w=800" 
+        mode="aspectFill"
+        lazy-load
+      ></image>
+      <view class="photo-overlay">
+        <text class="photo-title">城市夜景</text>
+        <text class="photo-desc">霓虹灯下的未来都市</text>
+      </view>
+      <view class="photo-frame-corner tl"></view>
+      <view class="photo-frame-corner tr"></view>
+      <view class="photo-frame-corner bl"></view>
+      <view class="photo-frame-corner br"></view>
+      <view class="photo-scanline"></view>
+    </view>
+  </view>
+
+  <!-- ====== 诗词模块 ====== -->
+  <view class="section poem-section">
+    <view class="section-header">
+      <text class="section-icon">◈</text>
+      <text class="section-title">POETRY MODULE</text>
+      <view class="section-line"></view>
+    </view>
+    <view class="poem-card" wx:if="{{currentPoem}}">
+      <view class="poem-header">
+        <text class="poem-title">《{{currentPoem.title}}》</text>
+        <text class="poem-author">[{{currentPoem.dynasty}}] {{currentPoem.author}}</text>
+      </view>
+      <view class="poem-content">
+        <text class="poem-line" wx:for="{{currentPoem.lines}}" wx:key="*this">{{item}}</text>
+      </view>
+      <view class="poem-footer">
+        <view class="poem-btn" bindtap="changePoem">
+          <text class="poem-btn-text">⟳ 换一首</text>
+        </view>
+      </view>
+      <view class="poem-decoration">
+        <view class="poem-corner tl"></view>
+        <view class="poem-corner tr"></view>
+        <view class="poem-corner bl"></view>
+        <view class="poem-corner br"></view>
+      </view>
+    </view>
+  </view>
+
+  <!-- ====== 视频模块 ====== -->
+  <view class="section video-section">
+    <view class="section-header">
+      <text class="section-icon">◈</text>
+      <text class="section-title">VIDEO STREAM</text>
+      <view class="section-line"></view>
+    </view>
+    <view class="video-card">
+      <video
+        class="video-player"
+        src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.webm"
+        poster="https://images.unsplash.com/photo-1519608487953-e999c86e7455?w=800"
+        object-fit="cover"
+        show-center-play-btn
+        enable-progress-gesture
+        show-play-btn
+        controls
+      ></video>
+      <view class="video-info">
+        <text class="video-title">创意编程演示</text>
+        <text class="video-desc">用代码绘制粒子艺术</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- ====== 技能雷达 ====== -->
+  <view class="section skill-section">
+    <view class="section-header">
+      <text class="section-icon">◈</text>
+      <text class="section-title">SKILL RADAR</text>
+      <view class="section-line"></view>
+    </view>
+    <view class="skill-list">
+      <view class="skill-item" wx:for="{{skills}}" wx:key="name">
+        <view class="skill-info">
+          <text class="skill-name">{{item.name}}</text>
+          <text class="skill-percent">{{item.percent}}%</text>
+        </view>
+        <view class="skill-bar-bg">
+          <view class="skill-bar-fill" style="width: {{item.percent}}%"></view>
+          <view class="skill-bar-glow" style="width: {{item.percent}}%"></view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- ====== 最新文章 ====== -->
+  <view class="section articles-section">
+    <view class="section-header">
+      <text class="section-icon">◈</text>
+      <text class="section-title">LATEST WORKS</text>
+      <view class="section-line"></view>
+    </view>
+    <view class="article-list">
+      <view 
+        class="article-card" 
+        wx:for="{{articles}}" 
+        wx:key="id"
+        bindtap="goToDetail"
+        data-id="{{item.id}}"
+      >
+        <view class="article-index">0{{index + 1}}</view>
+        <view class="article-body">
+          <view class="article-meta">
+            <text class="article-category">{{item.category}}</text>
+            <text class="article-date">{{item.date}}</text>
+          </view>
+          <text class="article-title">{{item.title}}</text>
+          <text class="article-summary">{{item.summary}}</text>
+          <view class="article-tags">
+            <text class="article-tag" wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this">#{{tag}}</text>
+            <text class="article-readtime">{{item.readTime}}</text>
+          </view>
+        </view>
+        <view class="article-arrow">→</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- ====== 随机引言 ====== -->
+  <view class="section quote-section">
+    <view class="section-header">
+      <text class="section-icon">◈</text>
+      <text class="section-title">RANDOM QUOTE</text>
+      <view class="section-line"></view>
+    </view>
+    <view class="quote-card">
+      <text class="quote-mark">"</text>
+      <text class="quote-text">{{quote.text}}</text>
+      <text class="quote-author">— {{quote.author}}</text>
+    </view>
+  </view>
+
+  <!-- ====== 底部 ====== -->
+  <view class="footer">
+    <view class="footer-line"></view>
+    <text class="footer-text">© 2026 鲁力铭 · 个人赛博空间</text>
+    <text class="footer-link">luliming.xyz</text>
+  </view>
+
+</scroll-view>

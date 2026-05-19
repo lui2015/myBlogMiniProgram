@@ -1,0 +1,54 @@
+<view class="container">
+  <!-- 头像和基本信息 -->
+  <view class="profile-section">
+    <view class="avatar-wrapper">
+      <text class="avatar-text">鲁</text>
+    </view>
+    <text class="name">鲁力铭</text>
+    <text class="role">全栈开发者 / 创意编程爱好者</text>
+    <text class="desc">热爱编程与创意设计，专注于 Web 全栈开发。喜欢探索技术与艺术的交汇点，用代码构建独特的数字体验。</text>
+  </view>
+
+  <!-- 技能 -->
+  <view class="section">
+    <text class="section-title">◈ 技能树</text>
+    <view class="skills">
+      <text class="skill-item" wx:for="{{skills}}" wx:key="*this">{{item}}</text>
+    </view>
+  </view>
+
+  <!-- 时间线 -->
+  <view class="section">
+    <text class="section-title">◈ 时间线</text>
+    <view class="timeline">
+      <view class="timeline-item" wx:for="{{timeline}}" wx:key="year">
+        <view class="timeline-dot"></view>
+        <view class="timeline-content">
+          <text class="timeline-year">{{item.year}}</text>
+          <text class="timeline-milestone">{{item.milestone}}</text>
+          <text class="timeline-desc">{{item.desc}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 联系方式 -->
+  <view class="section">
+    <text class="section-title">◈ 联系方式</text>
+    <view class="contact-list">
+      <view class="contact-item" wx:for="{{contacts}}" wx:key="name">
+        <text class="contact-name">{{item.name}}</text>
+        <text class="contact-value">{{item.value}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 博客链接 -->
+  <view class="section">
+    <text class="section-title">◈ 访问博客</text>
+    <view class="blog-link" bindtap="copyLink">
+      <text class="link-text">https://www.luliming.xyz</text>
+      <text class="link-hint">点击复制链接，在浏览器中打开</text>
+    </view>
+  </view>
+</view>

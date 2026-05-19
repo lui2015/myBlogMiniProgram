@@ -1,0 +1,16 @@
+<view class="container">
+  <view class="article-header">
+    <text class="category">{{article.category}}</text>
+    <text class="title">{{article.title}}</text>
+    <view class="meta">
+      <text class="date">{{article.date}}</text>
+      <text class="read-time">{{article.readTime}}</text>
+    </view>
+    <view class="tags">
+      <text class="tag" wx:for="{{article.tags}}" wx:key="*this">{{item}}</text>
+    </view>
+  </view>
+  <view class="article-content">
+    <rich-text nodes="{{article.content}}"></rich-text>
+  </view>
+</view>

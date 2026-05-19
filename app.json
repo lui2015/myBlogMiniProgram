@@ -1,0 +1,37 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/detail/detail",
+    "pages/about/about"
+  ],
+  "window": {
+    "navigationBarBackgroundColor": "#1a1a2e",
+    "navigationBarTitleText": "鲁力铭的博客",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#0f0f1a",
+    "backgroundTextStyle": "light"
+  },
+  "tabBar": {
+    "color": "#8a8a9a",
+    "selectedColor": "#00d4ff",
+    "backgroundColor": "#1a1a2e",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "博客",
+        "iconPath": "images/blog.png",
+        "selectedIconPath": "images/blog-active.png"
+      },
+      {
+        "pagePath": "pages/about/about",
+        "text": "关于",
+        "iconPath": "images/about.png",
+        "selectedIconPath": "images/about-active.png"
+      }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}
