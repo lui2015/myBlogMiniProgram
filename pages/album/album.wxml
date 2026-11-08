@@ -1,0 +1,25 @@
+<view class="page">
+
+  <view wx:if="{{loading}}" class="state"><text class="state-text">正在加载照片…</text></view>
+
+  <view wx:elif="{{error}}" class="state">
+    <text class="state-text">{{error}}</text>
+    <view class="state-retry" bindtap="onRetry">重新加载</view>
+  </view>
+
+  <view wx:elif="{{album}}">
+    <view class="album-head">
+      <text class="album-title">{{album.name}}</text>
+      <text class="album-sub">◈ {{photos.length}} PHOTOS · 点击图片可预览</text>
+    </view>
+
+    <view wx:if="{{photos.length}}" class="photo-grid">
+      <view class="photo-item" wx:for="{{photos}}" wx:key="id" bindtap="preview" data-src="{{item.src}}">
+        <image class="photo" src="{{item.src}}" mode="aspectFill" lazy-load></image>
+        <view class="photo-caption"><text>{{item.title}}</text></view>
+      </view>
+    </view>
+    <view wx:else class="state"><text class="state-text">该相册暂无照片</text></view>
+  </view>
+
+</view>

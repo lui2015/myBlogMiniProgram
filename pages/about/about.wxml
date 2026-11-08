@@ -1,54 +1,106 @@
-<view class="container">
-  <!-- 头像和基本信息 -->
-  <view class="profile-section">
-    <view class="avatar-wrapper">
-      <text class="avatar-text">鲁</text>
-    </view>
-    <text class="name">鲁力铭</text>
-    <text class="role">全栈开发者 / 创意编程爱好者</text>
-    <text class="desc">热爱编程与创意设计，专注于 Web 全栈开发。喜欢探索技术与艺术的交汇点，用代码构建独特的数字体验。</text>
+<view class="page">
+
+  <view wx:if="{{loading}}" class="state"><text class="state-text">正在加载…</text></view>
+
+  <view wx:elif="{{error}}" class="state">
+    <text class="state-text">{{error}}</text>
+    <view class="state-retry" bindtap="onRetry">重新加载</view>
   </view>
 
-  <!-- 技能 -->
-  <view class="section">
-    <text class="section-title">◈ 技能树</text>
-    <view class="skills">
-      <text class="skill-item" wx:for="{{skills}}" wx:key="*this">{{item}}</text>
-    </view>
-  </view>
+  <view wx:else>
 
-  <!-- 时间线 -->
-  <view class="section">
-    <text class="section-title">◈ 时间线</text>
-    <view class="timeline">
-      <view class="timeline-item" wx:for="{{timeline}}" wx:key="year">
-        <view class="timeline-dot"></view>
-        <view class="timeline-content">
-          <text class="timeline-year">{{item.year}}</text>
-          <text class="timeline-milestone">{{item.milestone}}</text>
-          <text class="timeline-desc">{{item.desc}}</text>
+    <!-- 个人资料 -->
+    <view class="profile">
+      <view class="avatar-wrap">
+        <image wx:if="{{hero.avatarUrl}}" class="avatar" src="{{hero.avatarUrl}}" mode="aspectFill"></image>
+        <view wx:else class="avatar avatar--text"><text>{{hero.avatarText || '鲁'}}</text></view>
+      </view>
+      <text class="profile-name">{{hero.title || '鲁力铭'}}</text>
+      <text class="profile-sub">{{hero.subtitle}}</text>
+    </view>
+
+    <!-- 数据概览 -->
+    <view wx:if="{{stats.length}}" class="cy-section">
+      <view class="sec-header">
+        <text class="sec-icon">◈</text><text class="sec-title">DATA OVERVIEW</text>
+        <view class="sec-line"></view>
+      </view>
+      <view class="stat-grid">
+        <view class="stat-card" wx:for="{{stats}}" wx:key="id">
+          <text class="stat-value">{{item.value}}</text>
+          <text class="stat-label">{{item.label}}{{item.suffix}}</text>
         </view>
       </view>
     </view>
-  </view>
 
-  <!-- 联系方式 -->
-  <view class="section">
-    <text class="section-title">◈ 联系方式</text>
-    <view class="contact-list">
-      <view class="contact-item" wx:for="{{contacts}}" wx:key="name">
-        <text class="contact-name">{{item.name}}</text>
-        <text class="contact-value">{{item.value}}</text>
+    <!-- 软件作品 -->
+    <view wx:if="{{softwares.length}}" class="cy-section">
+      <view class="sec-header">
+        <text class="sec-icon">◈</text><text class="sec-title">SOFTWARE WORKS</text>
+        <view class="sec-line"></view>
+      </view>
+      <view class="soft-list">
+        <view class="soft-card" wx:for="{{softwares}}" wx:key="id" bindtap="copyUrl" data-url="{{item.url}}">
+          <image class="soft-image" src="{{item.image}}" mode="aspectFill" lazy-load></image>
+          <view class="soft-body">
+            <text class="soft-name">{{item.name}}</text>
+            <text class="soft-desc">{{item.description}}</text>
+            <text class="soft-hint">点击复制链接</text>
+          </view>
+        </view>
       </view>
     </view>
+
+    <!-- 技能作品 -->
+    <view wx:if="{{myskills.length}}" class="cy-section">
+      <view class="sec-header">
+        <text class="sec-icon">◈</text><text class="sec-title">MY SKILLS</text>
+        <view class="sec-line"></view>
+      </view>
+      <view class="skill-list">
+        <view class="skill-row" wx:for="{{myskills}}" wx:key="id" bindtap="copyUrl" data-url="{{item.url}}">
+          <view class="skill-dot"></view>
+          <view class="skill-content">
+            <text class="skill-name">{{item.name}}</text>
+            <text wx:if="{{item.description}}" class="skill-desc">{{item.description}}</text>
+          </view>
+          <text class="skill-arrow">→</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 自媒体 -->
+    <view wx:if="{{socials.length}}" class="cy-section">
+      <view class="sec-header">
+        <text class="sec-icon">◈</text><text class="sec-title">SOCIAL MEDIA</text>
+        <view class="sec-line"></view>
+      </view>
+      <view class="social-grid">
+        <view class="social-card" wx:for="{{socials}}" wx:key="id" bindtap="previewQr" data-qr="{{item.qr}}" style="border-top-color: {{item.color}}">
+          <text class="social-icon">{{item.icon}}</text>
+          <text class="social-name">{{item.name}}</text>
+          <text class="social-desc">{{item.desc}}</text>
+        </view>
+      </view>
+      <text class="social-hint">点击卡片可查看二维码</text>
+    </view>
+
+    <!-- 博客链接 -->
+    <view class="cy-section">
+      <view class="sec-header">
+        <text class="sec-icon">◈</text><text class="sec-title">VISIT BLOG</text>
+        <view class="sec-line"></view>
+      </view>
+      <view class="blog-link" bindtap="copyBlogLink">
+        <text class="link-text">https://www.luliming.xyz</text>
+        <text class="link-hint">点击复制链接，在浏览器中打开</text>
+      </view>
+    </view>
+
+    <view class="footer">
+      <text class="footer-text">数据实时来自博客开放 API</text>
+    </view>
+
   </view>
 
-  <!-- 博客链接 -->
-  <view class="section">
-    <text class="section-title">◈ 访问博客</text>
-    <view class="blog-link" bindtap="copyLink">
-      <text class="link-text">https://www.luliming.xyz</text>
-      <text class="link-hint">点击复制链接，在浏览器中打开</text>
-    </view>
-  </view>
 </view>

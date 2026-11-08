@@ -1,40 +1,102 @@
+const api = require('../../utils/api')
+const { resolveUrl, resolveFields } = require('../../utils/util')
+
+const DEFAULT_COLOR = '#00d4ff'
+
+function safeColor(color) {
+  return /^#[0-9a-fA-F]{3,8}$/.test(color || '') ? color : DEFAULT_COLOR
+}
+
 Page({
   data: {
-    skills: [
-      'React', 'Next.js', 'TypeScript', 'Node.js',
-      'Python', 'TailwindCSS', 'Three.js', 'Docker',
-      'PostgreSQL', 'Redis', 'GraphQL', 'Figma'
-    ],
-    timeline: [
-      { year: '2025', milestone: '全栈创作者', desc: '融合技术与创意，持续输出' },
-      { year: '2024', milestone: '技术分享', desc: '开始分享作品和录制技术视频' },
-      { year: '2023', milestone: '开源贡献', desc: '参与多个开源项目' },
-      { year: '2022', milestone: '深入前端', desc: 'React 生态系统，TypeScript' },
-      { year: '2021', milestone: '全栈开发', desc: '学习 Node.js、数据库、云服务' },
-      { year: '2020', milestone: '开始编程之旅', desc: '接触 Web 前端开发' }
-    ],
-    contacts: [
-      { name: 'GitHub', value: 'github.com' },
-      { name: 'Bilibili', value: 'bilibili.com' },
-      { name: 'Email', value: 'hello@example.com' }
-    ]
+    hero: {},
+    stats: [],
+    softwares: [],
+    myskills: [],
+    socials: [],
+    loading: true,
+    error: ''
   },
 
-  copyLink() {
+  onLoad() {
+    this.load()
+  },
+
+  onPullDownRefresh() {
+    this.load().then(() => wx.stopPullDownRefresh())
+  },
+
+  load() {
+    this.setData({ loading: true, error: '' })
+
+    const tasks = [
+      api.getHero().then(hero => {
+        this.setData({
+          hero: Object.assign({}, hero, { avatarUrl: resolveUrl(hero.avatarUrl) })
+        })
+      }),
+      api.getList('stats').then(res => this.setData({ stats: res.items })),
+      api.getList('softwares').then(res => {
+        this.setData({ softwares: resolveFields(res.items, ['image']) })
+      }),
+      api.getList('myskills').then(res => this.setData({ myskills: res.items })),
+      api.getList('socialMedia').then(res => {
+        const socials = resolveFields(res.items, ['qr']).map(item =>
+          Object.assign({}, item, { color: safeColor(item.color) })
+        )
+        this.setData({ socials })
+      })
+    ]
+
+    let failures = 0
+    return Promise.all(tasks.map(task => task.catch(err => {
+      console.warn('[about]', err)
+      failures++
+    }))).then(() => {
+      this.setData({
+        loading: false,
+        error: failures === tasks.length ? '数据加载失败，请检查网络与合法域名配置' : ''
+      })
+    })
+  },
+
+  onRetry() {
+    this.load()
+  },
+
+  copyUrl(e) {
+    const url = e.currentTarget.dataset.url
+    if (!url) return
+    wx.setClipboardData({
+      data: url,
+      success: () => wx.showToast({ title: '链接已复制', icon: 'none' })
+    })
+  },
+
+  previewQr(e) {
+    const qr = e.currentTarget.dataset.qr
+    if (!qr) {
+      wx.showToast({ title: '暂无二维码', icon: 'none' })
+      return
+    }
+    wx.previewImage({
+      current: qr,
+      urls: [qr],
+      fail: () => wx.showToast({ title: '二维码加载失败', icon: 'none' })
+    })
+  },
+
+  copyBlogLink() {
     wx.setClipboardData({
       data: 'https://www.luliming.xyz',
-      success() {
-        wx.showToast({
-          title: '链接已复制',
-          icon: 'success'
-        })
-      }
+      success: () => wx.showToast({ title: '链接已复制，可在浏览器打开', icon: 'none' })
     })
   },
 
   onShareAppMessage() {
+    const { hero } = this.data
     return {
-      title: '鲁力铭 - 全栈开发者',
+      title: hero.subtitle || '鲁力铭',
       path: '/pages/about/about'
     }
   }

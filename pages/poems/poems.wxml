@@ -1,0 +1,43 @@
+<view class="page">
+
+  <view class="search-bar">
+    <text class="search-icon">⌕</text>
+    <input
+      class="search-input"
+      placeholder="搜索诗名 / 作者 / 诗句"
+      placeholder-class="search-ph"
+      value="{{keyword}}"
+      bindinput="onSearchInput"
+      confirm-type="search"
+    ></input>
+    <text wx:if="{{keyword}}" class="search-clear" bindtap="clearSearch">✕</text>
+  </view>
+
+  <view class="result-count">◈ POETRY COLLECTION · 共 {{poems.length}} 首</view>
+
+  <view wx:if="{{loading}}" class="state"><text class="state-text">正在加载…</text></view>
+  <view wx:elif="{{error}}" class="state">
+    <text class="state-text">{{error}}</text>
+    <view class="state-retry" bindtap="onRetry">重新加载</view>
+  </view>
+  <view wx:elif="{{!poems.length}}" class="state">
+    <text class="state-text">没有找到匹配的诗词</text>
+  </view>
+
+  <view wx:else>
+    <view class="poem-card" wx:for="{{poems}}" wx:key="id">
+      <view class="poem-head">
+        <text class="poem-title">{{item.title}}</text>
+        <text class="poem-author">{{item.dynasty}} · {{item.author}}</text>
+      </view>
+      <view class="poem-body">
+        <text class="poem-line" wx:for="{{item.lines}}" wx:for-item="line" wx:key="*this">{{line}}</text>
+      </view>
+      <view class="poem-foot">{{item.date}}</view>
+      <view class="poem-corner tl"></view>
+      <view class="poem-corner br"></view>
+    </view>
+    <view class="list-end">— 全部 {{total}} 首 —</view>
+  </view>
+
+</view>

@@ -1,0 +1,31 @@
+<view class="page">
+
+  <view wx:if="{{loading}}" class="state"><text class="state-text">正在加载相册…</text></view>
+
+  <view wx:elif="{{error}}" class="state">
+    <text class="state-text">{{error}}</text>
+    <view class="state-retry" bindtap="onRetry">重新加载</view>
+  </view>
+
+  <view wx:elif="{{!albums.length}}" class="state">
+    <text class="state-text">暂无相册</text>
+  </view>
+
+  <view wx:else>
+    <view class="page-hint">◈ ALBUM COLLECTION · 共 {{albums.length}} 组</view>
+    <view class="album-grid">
+      <view class="album-card" wx:for="{{albums}}" wx:key="id" bindtap="goAlbum" data-id="{{item.id}}">
+        <image class="album-cover" src="{{item.cover}}" mode="aspectFill" lazy-load></image>
+        <view class="album-mask"></view>
+        <view class="album-info">
+          <text class="album-name">{{item.name}}</text>
+          <text class="album-count">{{item.photoCount}} 张照片</text>
+        </view>
+        <view class="album-corner tl"></view>
+        <view class="album-corner br"></view>
+      </view>
+    </view>
+    <view class="list-end">— 全部相册 —</view>
+  </view>
+
+</view>

@@ -1,0 +1,56 @@
+<view class="page">
+
+  <scroll-view class="cat-scroll" scroll-x enable-flex show-scrollbar="{{false}}">
+    <view class="cat-list">
+      <text
+        class="cat-item {{currentCategory === item ? 'active' : ''}}"
+        wx:for="{{categories}}"
+        wx:key="*this"
+        bindtap="onCategoryTap"
+        data-category="{{item}}"
+      >{{item}}</text>
+    </view>
+  </scroll-view>
+
+  <view class="result-count">共 {{videos.length}} 个视频</view>
+
+  <view wx:if="{{loading}}" class="state"><text class="state-text">正在加载…</text></view>
+  <view wx:elif="{{error}}" class="state">
+    <text class="state-text">{{error}}</text>
+    <view class="state-retry" bindtap="onRetry">重新加载</view>
+  </view>
+  <view wx:elif="{{!videos.length}}" class="state">
+    <text class="state-text">暂无视频</text>
+  </view>
+
+  <view wx:else class="video-list">
+    <view class="video-card" wx:for="{{videos}}" wx:key="id" bindtap="onCardTap" data-id="{{item.id}}">
+      <view class="thumb">
+        <image class="thumb-img" src="{{item.cover}}" mode="aspectFill" lazy-load></image>
+        <view class="thumb-mask"></view>
+        <view class="play-btn">▶</view>
+        <text class="duration">{{item.duration}}</text>
+        <view class="thumb-corner tl"></view>
+        <view class="thumb-corner br"></view>
+      </view>
+      <view class="video-info">
+        <view class="video-meta">
+          <text class="cy-tag">{{item.category}}</text>
+          <text class="video-date">{{item.date}}</text>
+        </view>
+        <text class="video-title">{{item.title}}</text>
+        <text class="video-views">{{item.views}} 次观看 · 点击{{item.src ? '播放' : '查看封面'}}</text>
+      </view>
+    </view>
+    <view class="list-end">— 已加载全部 {{total}} 个 —</view>
+  </view>
+
+  <!-- 站内视频 src 有值时在此播放 -->
+  <view wx:if="{{playingUrl}}" class="player-mask">
+    <view class="player-box">
+      <video class="player" src="{{playingUrl}}" autoplay controls object-fit="contain"></video>
+      <view class="player-close" bindtap="closePlayer">✕ 关闭播放</view>
+    </view>
+  </view>
+
+</view>

@@ -1,16 +1,74 @@
-<view class="container">
-  <view class="article-header">
-    <text class="category">{{article.category}}</text>
-    <text class="title">{{article.title}}</text>
-    <view class="meta">
-      <text class="date">{{article.date}}</text>
-      <text class="read-time">{{article.readTime}}</text>
-    </view>
-    <view class="tags">
-      <text class="tag" wx:for="{{article.tags}}" wx:key="*this">{{item}}</text>
-    </view>
+<view class="page">
+
+  <view wx:if="{{loading}}" class="state"><text class="state-text">正在加载文章…</text></view>
+
+  <view wx:elif="{{error}}" class="state">
+    <text class="state-text">{{error}}</text>
+    <view class="state-retry" bindtap="onRetry">重新加载</view>
   </view>
-  <view class="article-content">
-    <rich-text nodes="{{article.content}}"></rich-text>
+
+  <view wx:elif="{{article}}">
+
+    <image wx:if="{{article.cover}}" class="cover" src="{{article.cover}}" mode="aspectFill" bindtap="previewCover" lazy-load></image>
+
+    <view class="head">
+      <view class="head-meta">
+        <text class="cy-tag">{{article.category}}</text>
+        <text class="head-date">{{article.date}}</text>
+        <text class="head-readtime">{{article.readTime}}</text>
+      </view>
+      <text class="head-title">{{article.title}}</text>
+      <text class="head-excerpt">{{article.excerpt}}</text>
+      <view class="head-tags">
+        <text class="head-tag" wx:for="{{article.tags}}" wx:key="*this">#{{item}}</text>
+      </view>
+    </view>
+
+    <!-- Markdown 正文：结构化 blocks 用原生组件渲染 -->
+    <view class="md">
+      <block wx:for="{{blocks}}" wx:key="key">
+
+        <view wx:if="{{item.type === 'heading'}}" class="md-h md-h{{item.level}}">
+          <text class="md-h-mark"></text><text>{{item.text}}</text>
+        </view>
+
+        <view wx:elif="{{item.type === 'paragraph'}}" class="md-p">
+          <text
+            wx:for="{{item.spans}}"
+            wx:for-item="span"
+            wx:key="key"
+            class="{{span.code ? 'md-inline-code' : (span.bold ? 'md-bold' : '')}}"
+            bindtap="onSpanTap"
+            data-link="{{span.link || ''}}"
+          >{{span.text}}</text>
+        </view>
+
+        <view wx:elif="{{item.type === 'list'}}" class="md-list">
+          <view class="md-li" wx:for="{{item.items}}" wx:for-item="li" wx:for-index="liIndex" wx:key="key">
+            <text class="md-li-marker">{{item.ordered ? liIndex + 1 : '▸'}}</text>
+            <view class="md-li-text">
+              <text
+                wx:for="{{li.spans}}"
+                wx:for-item="span"
+                wx:key="key"
+                class="{{span.code ? 'md-inline-code' : (span.bold ? 'md-bold' : '')}}"
+              >{{span.text}}</text>
+            </view>
+          </view>
+        </view>
+
+        <view wx:elif="{{item.type === 'code'}}" class="md-pre"><text>{{item.text}}</text></view>
+
+        <view wx:elif="{{item.type === 'quote'}}" class="md-quote"><text>{{item.text}}</text></view>
+
+        <image wx:elif="{{item.type === 'image'}}" class="md-img" src="{{item.src}}" mode="widthFix" lazy-load></image>
+
+        <view wx:elif="{{item.type === 'divider'}}" class="md-hr"></view>
+
+      </block>
+    </view>
+
+    <view class="article-end">— END —</view>
   </view>
+
 </view>

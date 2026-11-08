@@ -1,0 +1,29 @@
+<view class="page">
+
+  <view class="page-head">
+    <text class="page-title">◈ MY THOUGHTS</text>
+    <text class="page-sub">共 {{total}} 条思考 · 已加载 {{quotes.length}} 条</text>
+  </view>
+
+  <view wx:if="{{loading}}" class="state"><text class="state-text">正在加载…</text></view>
+
+  <view wx:elif="{{error}}" class="state">
+    <text class="state-text">{{error}}</text>
+    <view class="state-retry" bindtap="onRetry">重新加载</view>
+  </view>
+
+  <view wx:else>
+    <view class="quote-card" wx:for="{{quotes}}" wx:key="id" style="border-left-color: {{index % 2 === 0 ? '#a855f7' : '#00d4ff'}}">
+      <view class="quote-top">
+        <text class="quote-no">NO.{{index + 1}}</text>
+        <text class="quote-author">{{item.author}}</text>
+      </view>
+      <text class="quote-text">{{item.text}}</text>
+    </view>
+
+    <view wx:if="{{loadingMore}}" class="list-end">正在加载更多…</view>
+    <view wx:elif="{{!hasMore}}" class="list-end">— 已加载全部 {{total}} 条 —</view>
+    <view wx:else class="list-end">上拉加载更多</view>
+  </view>
+
+</view>

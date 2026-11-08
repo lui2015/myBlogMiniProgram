@@ -1,0 +1,58 @@
+.page {
+  min-height: 100vh;
+  padding: 32rpx 32rpx 60rpx;
+}
+
+.page-head {
+  margin-bottom: 28rpx;
+}
+
+.page-title {
+  display: block;
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #ffffff;
+  font-family: monospace;
+  letter-spacing: 2rpx;
+}
+
+.page-sub {
+  display: block;
+  font-size: 21rpx;
+  color: #6a6a7a;
+  margin-top: 8rpx;
+}
+
+.quote-card {
+  border-left: 4rpx solid #a855f7;
+  background-color: rgba(255, 255, 255, 0.025);
+  border-radius: 0 12rpx 12rpx 0;
+  padding: 26rpx 28rpx;
+  margin-bottom: 20rpx;
+}
+
+.quote-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.quote-no {
+  font-size: 20rpx;
+  color: #00d4ff;
+  font-family: monospace;
+  letter-spacing: 1rpx;
+}
+
+.quote-author {
+  font-size: 20rpx;
+  color: #6a6a7a;
+}
+
+.quote-text {
+  display: block;
+  font-size: 26rpx;
+  color: rgba(255, 255, 255, 0.82);
+  line-height: 1.85;
+}

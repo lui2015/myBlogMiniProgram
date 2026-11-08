@@ -1,9 +1,9 @@
 App({
-  onLaunch() {
-    console.log('博客小程序启动')
+  globalData: {
+    baseUrl: 'https://www.luliming.xyz'
   },
 
-  globalData: {
-    blogUrl: 'https://www.luliming.xyz'
+  onLaunch() {
+    console.log('博客小程序启动，数据源：开放 API')
   }
 })
