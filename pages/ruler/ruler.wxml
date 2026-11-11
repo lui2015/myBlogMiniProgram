@@ -1,0 +1,138 @@
+<view class="page {{fullscreen ? 'fullscreen' : ''}}">
+
+  <!-- 全屏顶部：结果与退出 -->
+  <view wx:if="{{fullscreen}}" class="fs-top">
+    <view class="fs-result">
+      <text class="fs-value">{{mainValue}}</text>
+      <text class="fs-unit">{{mainUnit}}</text>
+    </view>
+    <text class="fs-sub">{{subValue}}{{calibrated ? '' : ' · 未校准'}}</text>
+    <view class="fs-exit" bindtap="toggleFullscreen">退出全屏</view>
+  </view>
+
+  <block wx:if="{{!fullscreen}}">
+    <view class="hero">
+      <view class="hero-grid"></view>
+      <text class="hero-title">RULER</text>
+      <text class="hero-sub">// 屏幕刻度尺</text>
+      <view class="hero-line"></view>
+    </view>
+
+    <!-- 测量结果 -->
+    <view class="result-card">
+      <text class="result-label">◈ 游标间距</text>
+      <view class="result-main">
+        <text class="result-number">{{mainValue}}</text>
+        <text class="result-unit">{{mainUnit}}</text>
+      </view>
+      <text class="result-sub">{{subValue}}</text>
+      <view class="result-actions">
+        <view class="mini-btn" bindtap="onResetCursors">重置游标</view>
+        <view class="mini-btn ghost" bindtap="copyResult">复制结果</view>
+      </view>
+    </view>
+
+    <!-- 单位 / 方向 -->
+    <view class="control-card">
+      <view class="control-row">
+        <text class="control-label">单位</text>
+        <view class="seg">
+          <view class="seg-item {{isCm ? 'active' : ''}}" data-unit="cm" bindtap="onUnitTap">厘米 cm</view>
+          <view class="seg-item {{!isCm ? 'active' : ''}}" data-unit="inch" bindtap="onUnitTap">英寸 in</view>
+        </view>
+      </view>
+      <view class="control-row">
+        <text class="control-label">方向</text>
+        <view class="seg">
+          <view class="seg-item {{!isVertical ? 'active' : ''}}" data-dir="horizontal" bindtap="onDirectionTap">横向</view>
+          <view class="seg-item {{isVertical ? 'active' : ''}}" data-dir="vertical" bindtap="onDirectionTap">竖向</view>
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <!-- 刻度尺：刻度、参考线、双游标全部本机渲染；全屏时铺满视口 -->
+  <view class="ruler-shell">
+    <view wx:if="{{!fullscreen}}" class="ruler-head">
+      <text class="ruler-title">{{isVertical ? '竖向尺' : '横向尺'}} · {{tickHint}}</text>
+      <view class="fs-open" bindtap="toggleFullscreen">⤢ 全屏</view>
+    </view>
+    <view
+      class="ruler-area {{isVertical ? 'vertical' : ''}}"
+      style="{{areaStyle}}"
+      catchtouchstart="onRulerStart"
+      catchtouchmove="onRulerMove"
+      catchtouchend="onRulerEnd"
+      catchtouchcancel="onRulerEnd"
+    >
+      <view
+        class="tick {{isVertical ? 'v-tick' : 'h-tick'}} {{item.level}}"
+        wx:for="{{ticks}}"
+        wx:key="pos"
+        style="{{item.style}}"
+      ><text wx:if="{{item.major}}" class="tick-label">{{item.label}}</text></view>
+
+      <view wx:if="{{refPx > 0}}" class="ref-line {{isVertical ? 'v-ref' : 'h-ref'}}" style="{{refStyle}}">
+        <text class="ref-tag">{{refLabel}}</text>
+      </view>
+
+      <view class="cursor cursor-a {{isVertical ? 'v-cursor' : 'h-cursor'}}" style="{{cursorAStyle}}"><text>A</text></view>
+      <view class="cursor cursor-b {{isVertical ? 'v-cursor' : 'h-cursor'}}" style="{{cursorBStyle}}"><text>B</text></view>
+    </view>
+    <view wx:if="{{!fullscreen}}" class="ruler-foot">
+      <text class="ruler-scale">1 cm ≈ {{pxPerCmText}} px · {{tickHint}}</text>
+      <text class="ruler-scale">{{calibrated ? '已校准' : '未校准 · 请先校准'}}</text>
+    </view>
+  </view>
+
+  <!-- 全屏底部：单位 / 方向 / 重置 / 复制 -->
+  <view wx:if="{{fullscreen}}" class="fs-bottom">
+    <view class="fs-btn {{isCm ? 'active' : ''}}" data-unit="cm" bindtap="onUnitTap">cm</view>
+    <view class="fs-btn {{!isCm ? 'active' : ''}}" data-unit="inch" bindtap="onUnitTap">in</view>
+    <view class="fs-btn {{!isVertical ? 'active' : ''}}" data-dir="horizontal" bindtap="onDirectionTap">横向</view>
+    <view class="fs-btn {{isVertical ? 'active' : ''}}" data-dir="vertical" bindtap="onDirectionTap">竖向</view>
+    <view class="fs-btn" bindtap="onResetCursors">重置</view>
+    <view class="fs-btn" bindtap="copyResult">复制</view>
+  </view>
+
+  <block wx:if="{{!fullscreen}}">
+    <!-- 校准 -->
+    <view class="cal-card">
+      <text class="cal-title">◈ 校准（首次使用必做）</text>
+      <text class="cal-text">手机系统不提供屏幕物理尺寸，默认值仅供估算。请用实体尺量出屏幕宽度，或把银行卡 / 硬币贴在屏幕上对齐参考线，校准值只保存在本机。</text>
+
+      <view class="width-row">
+        <input class="width-input" type="digit" value="{{widthInput}}" placeholder="屏幕宽度 mm（如 70）" placeholder-class="ph" bindinput="onWidthInput" />
+        <view class="width-btn" bindtap="onWidthApply">按宽度校准</view>
+      </view>
+
+      <view class="slider-head">
+        <text class="slider-label">刻度密度</text>
+        <text class="slider-value">{{pxPerCmText}} px / cm</text>
+      </view>
+      <slider class="slider" min="20" max="160" step="0.1" value="{{pxPerCm}}" activeColor="#00d4ff" backgroundColor="#232a44" block-color="#a855f7" block-size="20" bindchange="onSliderChange" />
+      <view class="step-row">
+        <view class="step-btn" data-delta="-1" bindtap="onStepTap">− 1</view>
+        <view class="step-btn" data-delta="-0.1" bindtap="onStepTap">− 0.1</view>
+        <view class="step-btn" data-delta="0.1" bindtap="onStepTap">+ 0.1</view>
+        <view class="step-btn" data-delta="1" bindtap="onStepTap">+ 1</view>
+      </view>
+
+      <view class="ref-head"><text class="slider-label">参照物对齐</text></view>
+      <view class="ref-chips">
+        <view class="ref-chip {{refKey === item.key ? 'active' : ''}}" wx:for="{{refs}}" wx:key="key" data-key="{{item.key}}" bindtap="onRefTap">{{item.label}} {{item.mm}}mm</view>
+      </view>
+      <view wx:if="{{refHint}}" class="ref-tip">
+        <text class="ref-tip-text">{{refHint}}{{refOverflow ? ' 当前参考线超出屏幕刻度范围，请改用小参照物。' : ''}}</text>
+        <view class="ref-close" bindtap="onRefClose">收起参考线</view>
+      </view>
+
+      <view class="cal-reset" bindtap="onResetCalibration">恢复默认值</view>
+    </view>
+
+    <view class="note">
+      <text class="note-text">测量精度取决于校准结果，仅供日常估测使用；点「全屏」可隐藏面板让尺子铺满屏幕，手机横放时页面会自动适应。本工具不联网、不申请权限、不上传任何数据。</text>
+    </view>
+  </block>
+
+</view>

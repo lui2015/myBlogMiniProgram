@@ -13,7 +13,8 @@ Page({
     error: ''
   },
 
-  onLoad() {
+  onLoad(options) {
+    this.keyword = (options && options.q) || ''
     this.loadFirst()
   },
 
@@ -27,7 +28,7 @@ Page({
 
   loadFirst() {
     this.setData({ loading: true, error: '', page: 1, hasMore: true })
-    return api.getPage('quotes', 1, PAGE_SIZE)
+    return api.getPage('quotes', 1, PAGE_SIZE, this.keyword ? { q: this.keyword } : {})
       .then(res => {
         this.setData({
           quotes: res.items,
@@ -48,7 +49,7 @@ Page({
 
     const nextPage = page + 1
     this.setData({ loadingMore: true })
-    return api.getPage('quotes', nextPage, PAGE_SIZE)
+    return api.getPage('quotes', nextPage, PAGE_SIZE, this.keyword ? { q: this.keyword } : {})
       .then(res => {
         this.setData({
           quotes: this.data.quotes.concat(res.items),

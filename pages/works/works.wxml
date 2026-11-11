@@ -1,58 +1,146 @@
 <view class="page">
 
-  <view class="search-bar">
-    <text class="search-icon">⌕</text>
-    <input
-      class="search-input"
-      placeholder="搜索标题 / 摘要 / 标签"
-      placeholder-class="search-ph"
-      value="{{keyword}}"
-      bindinput="onSearchInput"
-      confirm-type="search"
-    ></input>
-    <text wx:if="{{keyword}}" class="search-clear" bindtap="clearSearch">✕</text>
+  <!-- ====== 作品分类导览 ====== -->
+  <view class="works-hero">
+    <text class="works-title">WORKS</text>
+    <text class="works-sub">// 分类导览 · 选择想看的内容</text>
   </view>
 
-  <scroll-view class="cat-scroll" scroll-x enable-flex show-scrollbar="{{false}}">
-    <view class="cat-list">
-      <text
-        class="cat-item {{currentCategory === item ? 'active' : ''}}"
-        wx:for="{{categories}}"
-        wx:key="*this"
-        bindtap="onCategoryTap"
-        data-category="{{item}}"
-      >{{item}}</text>
-    </view>
-  </scroll-view>
-
-  <view class="result-count">共 {{works.length}} 篇文章</view>
-
-  <view wx:if="{{loading}}" class="state"><text class="state-text">正在加载…</text></view>
-  <view wx:elif="{{error}}" class="state">
-    <text class="state-text">{{error}}</text>
-    <view class="state-retry" bindtap="fetchWorks">重新加载</view>
-  </view>
-  <view wx:elif="{{!works.length}}" class="state">
-    <text class="state-text">没有找到匹配的文章</text>
+  <view class="sec-header">
+    <text class="sec-icon">◈</text>
+    <text class="sec-title">CATEGORY GUIDE</text>
+    <view class="sec-line"></view>
   </view>
 
-  <view wx:else class="list">
-    <view class="work-card" wx:for="{{works}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}">
-      <image class="work-cover" src="{{item.cover}}" mode="aspectFill" lazy-load></image>
-      <view class="work-body">
-        <view class="work-meta">
-          <text class="cy-tag">{{item.category}}</text>
-          <text class="work-date">{{item.date}}</text>
-        </view>
-        <text class="work-title">{{item.title}}</text>
-        <text class="work-excerpt">{{item.excerpt}}</text>
-        <view class="work-foot">
-          <text class="work-tag" wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this">#{{tag}}</text>
-          <text class="work-readtime">{{item.readTime}}</text>
-        </view>
+  <view class="guide-grid">
+    <view
+      class="guide-card {{item.tone}} {{item.isCurrent ? 'current' : ''}}"
+      wx:for="{{guides}}"
+      wx:key="key"
+      bindtap="onGuideTap"
+      data-key="{{item.key}}"
+    >
+      <view class="guide-top">
+        <text class="guide-no">{{item.no}}</text>
+        <text class="guide-icon">{{item.icon}}</text>
+        <text class="guide-arrow">→</text>
+      </view>
+      <text class="guide-name">{{item.name}}</text>
+      <text class="guide-en">{{item.en}}</text>
+      <text class="guide-desc">{{item.desc}}</text>
+      <view class="guide-foot">
+        <text class="guide-count">{{item.countText}}</text>
+        <text wx:if="{{item.isCurrent}}" class="guide-here">当前页</text>
       </view>
     </view>
-    <view class="list-end">— 已加载全部 {{total}} 篇 —</view>
+  </view>
+
+  <!-- ====== 文章 ====== -->
+  <view class="article-section">
+    <view class="sec-header">
+      <text class="sec-icon">◈</text>
+      <text class="sec-title">{{searching ? 'SEARCH RESULTS' : 'LATEST ARTICLES'}}</text>
+      <view class="sec-line"></view>
+    </view>
+
+    <view class="search-bar">
+      <text class="search-icon">⌕</text>
+      <input
+        class="search-input"
+        placeholder="搜索全部作品 · 文章/相册/视频/诗词/思考/软件"
+        placeholder-class="search-ph"
+        value="{{keyword}}"
+        bindinput="onSearchInput"
+        confirm-type="search"
+      ></input>
+      <text wx:if="{{keyword}}" class="search-clear" bindtap="clearSearch">✕</text>
+    </view>
+
+    <scroll-view wx:if="{{!searching}}" class="cat-scroll" scroll-x enable-flex show-scrollbar="{{false}}">
+      <view class="cat-list">
+        <text
+          class="cat-item {{currentCategory === item ? 'active' : ''}}"
+          wx:for="{{categories}}"
+          wx:key="*this"
+          bindtap="onCategoryTap"
+          data-category="{{item}}"
+        >{{item}}</text>
+      </view>
+    </scroll-view>
+
+    <view class="result-count">{{countText}}</view>
+
+    <!-- 全站搜索：按作品类型分组 -->
+    <view wx:if="{{searching}}">
+      <view wx:if="{{searchLoading}}" class="state">
+        <text class="state-text">正在搜索全部作品类型…</text>
+      </view>
+      <view wx:elif="{{searchError}}" class="state">
+        <text class="state-text">{{searchError}}</text>
+        <view class="state-retry" bindtap="onRetry">重新搜索</view>
+      </view>
+      <view wx:elif="{{!searchTotal}}" class="state">
+        <text class="state-text">{{emptyText}}</text>
+      </view>
+      <view wx:else class="search-groups">
+        <view class="search-group" wx:for="{{searchGroups}}" wx:key="key">
+          <view class="group-head">
+            <text class="group-icon">{{item.icon}}</text>
+            <text class="group-name">{{item.name}}</text>
+            <text class="group-count">{{item.total}} 条</text>
+            <view class="group-more" bindtap="onGroupMore" data-key="{{item.key}}">查看全部 →</view>
+          </view>
+          <view class="group-list">
+            <view
+              class="result-item"
+              wx:for="{{item.items}}"
+              wx:for-item="row"
+              wx:key="id"
+              bindtap="onResultTap"
+              data-url="{{row.path}}"
+            >
+              <view class="result-body">
+                <text class="result-title">{{row.title}}</text>
+                <text wx:if="{{row.subtitle}}" class="result-sub">{{row.subtitle}}</text>
+              </view>
+              <text class="result-arrow">→</text>
+            </view>
+          </view>
+          <text wx:if="{{item.total > item.items.length}}" class="group-tip">仅显示前 {{item.items.length}} 条，共 {{item.total}} 条</text>
+        </view>
+        <view class="list-end">— 搜索完成 · 覆盖 6 类作品 —</view>
+      </view>
+    </view>
+
+    <!-- 未搜索时展示文章列表 -->
+    <block wx:else>
+      <view wx:if="{{loading}}" class="state"><text class="state-text">正在加载…</text></view>
+      <view wx:elif="{{error}}" class="state">
+        <text class="state-text">{{error}}</text>
+        <view class="state-retry" bindtap="onRetry">重新加载</view>
+      </view>
+      <view wx:elif="{{!works.length}}" class="state">
+        <text class="state-text">没有找到匹配的文章</text>
+      </view>
+      <view wx:else class="list">
+        <view class="work-card" wx:for="{{works}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}">
+          <image class="work-cover" src="{{item.cover}}" mode="aspectFill" lazy-load></image>
+          <view class="work-body">
+            <view class="work-meta">
+              <text class="cy-tag">{{item.category}}</text>
+              <text class="work-date">{{item.date}}</text>
+            </view>
+            <text class="work-title">{{item.title}}</text>
+            <text class="work-excerpt">{{item.excerpt}}</text>
+            <view class="work-foot">
+              <text class="work-tag" wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this">#{{tag}}</text>
+              <text class="work-readtime">{{item.readTime}}</text>
+            </view>
+          </view>
+        </view>
+        <view class="list-end">— 已加载全部 {{total}} 篇 —</view>
+      </view>
+    </block>
   </view>
 
 </view>

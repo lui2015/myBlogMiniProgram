@@ -1,0 +1,216 @@
+.page {
+  min-height: 100vh;
+  padding: 0 32rpx 80rpx;
+}
+
+.hero {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0 -32rpx;
+  padding: 60rpx 32rpx 44rpx;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 50% 0%, #141a33 0%, #0a0a14 78%);
+}
+
+.hero-grid {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image:
+    linear-gradient(rgba(0, 212, 255, 0.03) 1rpx, transparent 1rpx),
+    linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1rpx, transparent 1rpx);
+  background-size: 44rpx 44rpx;
+}
+
+.hero-title {
+  position: relative;
+  font-size: 52rpx;
+  font-weight: 900;
+  letter-spacing: 6rpx;
+  color: #ffffff;
+  text-shadow: -4rpx 0 #ff2d95, 4rpx 0 #00d4ff, 0 0 30rpx rgba(0, 212, 255, 0.4);
+}
+
+.hero-sub {
+  position: relative;
+  font-size: 22rpx;
+  color: #7a7a96;
+  font-family: monospace;
+  margin-top: 16rpx;
+}
+
+.hero-line {
+  position: relative;
+  width: 140rpx;
+  height: 2rpx;
+  margin-top: 26rpx;
+  background: linear-gradient(90deg, transparent, #00d4ff, transparent);
+}
+
+.section-head {
+  display: flex;
+  align-items: center;
+  margin: 44rpx 0 24rpx;
+}
+
+.sec-icon {
+  font-size: 26rpx;
+  color: #00d4ff;
+  margin-right: 12rpx;
+}
+
+.sec-title {
+  font-size: 23rpx;
+  font-weight: bold;
+  color: rgba(255, 255, 255, 0.7);
+  letter-spacing: 3rpx;
+  font-family: monospace;
+}
+
+.sec-line {
+  flex: 1;
+  height: 1rpx;
+  margin-left: 20rpx;
+  background: linear-gradient(90deg, rgba(0, 212, 255, 0.3), transparent);
+}
+
+.tool-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 30rpx 26rpx;
+  margin-bottom: 24rpx;
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.05), rgba(255, 255, 255, 0.015));
+  border: 1rpx solid rgba(0, 212, 255, 0.16);
+  border-radius: 16rpx;
+  overflow: hidden;
+}
+
+.tool-card:active {
+  background-color: rgba(0, 212, 255, 0.1);
+  border-color: rgba(0, 212, 255, 0.4);
+}
+
+.tool-icon-wrap {
+  width: 92rpx;
+  height: 92rpx;
+  flex-shrink: 0;
+  margin-right: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 212, 255, 0.08);
+  border: 1rpx solid rgba(0, 212, 255, 0.25);
+  border-radius: 14rpx;
+}
+
+.tool-icon {
+  font-size: 44rpx;
+}
+
+.tool-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.tool-top {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 10rpx;
+}
+
+.tool-name {
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #ffffff;
+  margin-right: 14rpx;
+}
+
+.tool-tag {
+  font-size: 19rpx;
+  color: #a855f7;
+  background-color: rgba(168, 85, 247, 0.12);
+  padding: 3rpx 12rpx;
+  border-radius: 4rpx;
+}
+
+.tool-desc {
+  display: block;
+  font-size: 22rpx;
+  color: #8a8a9a;
+  line-height: 1.6;
+}
+
+.tool-preview {
+  display: block;
+  margin-top: 14rpx;
+  padding-left: 14rpx;
+  border-left: 2rpx solid rgba(0, 212, 255, 0.6);
+  font-size: 20rpx;
+  color: #00d4ff;
+  font-family: monospace;
+  line-height: 1.5;
+}
+
+.tool-arrow {
+  font-size: 30rpx;
+  color: rgba(0, 212, 255, 0.5);
+  margin-left: 12rpx;
+}
+
+.tool-corner {
+  position: absolute;
+  width: 20rpx;
+  height: 20rpx;
+  border-color: rgba(0, 212, 255, 0.7);
+  border-style: solid;
+}
+
+.tool-corner.tl { top: 8rpx; left: 8rpx; border-width: 2rpx 0 0 2rpx; }
+.tool-corner.br { bottom: 8rpx; right: 8rpx; border-width: 0 2rpx 2rpx 0; }
+
+.tip-card {
+  margin-top: 36rpx;
+  padding: 28rpx;
+  background-color: rgba(168, 85, 247, 0.04);
+  border: 1rpx solid rgba(168, 85, 247, 0.15);
+  border-left: 4rpx solid #a855f7;
+  border-radius: 0 12rpx 12rpx 0;
+}
+
+.tip-title {
+  display: block;
+  font-size: 24rpx;
+  color: #a855f7;
+  margin-bottom: 12rpx;
+}
+
+.tip-text {
+  display: block;
+  font-size: 22rpx;
+  color: #8a8a9a;
+  line-height: 1.8;
+}
+
+.coming {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 60rpx;
+}
+
+.coming-line {
+  width: 70rpx;
+  height: 1rpx;
+  background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.3), transparent);
+  margin: 0 20rpx;
+}
+
+.coming-text {
+  font-size: 19rpx;
+  color: #5a5a6a;
+  font-family: monospace;
+  letter-spacing: 2rpx;
+}

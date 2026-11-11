@@ -76,9 +76,20 @@ function getHero() {
   return getSection('hero')
 }
 
+// 「关于我」页面数据（单例对象，字段见 OPEN_API.md 4.10）
+// 带时间戳参数，避免任何客户端 GET 缓存导致后台修改不生效
+function getAbout() {
+  return getSection('about', { _t: Date.now() })
+}
+
 // 接口索引 / 数据字典
 function getIndex() {
   return request('/api/open')
+}
+
+// 站点工作日计算器的节假日数据（2024-2028，含调休补班）
+function getHolidays() {
+  return request('/workday/holidays.json')
 }
 
 module.exports = {
@@ -89,5 +100,7 @@ module.exports = {
   getPage,
   getDetail,
   getHero,
-  getIndex
+  getAbout,
+  getIndex,
+  getHolidays
 }

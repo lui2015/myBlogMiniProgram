@@ -1,0 +1,52 @@
+<view class="page">
+
+  <view class="hero">
+    <view class="hero-grid"></view>
+    <text class="hero-title">UTILITY TOOLS</text>
+    <text class="hero-sub">// 实用小工具集合</text>
+    <view class="hero-line"></view>
+  </view>
+
+  <view class="section-head">
+    <text class="sec-icon">◈</text>
+    <text class="sec-title">TOOL LIST</text>
+    <view class="sec-line"></view>
+  </view>
+
+  <view class="tool-list">
+    <view
+      class="tool-card"
+      wx:for="{{tools}}"
+      wx:key="key"
+      bindtap="goTool"
+      data-path="{{item.path}}"
+    >
+      <view class="tool-icon-wrap">
+        <text class="tool-icon">{{item.icon}}</text>
+      </view>
+      <view class="tool-body">
+        <view class="tool-top">
+          <text class="tool-name">{{item.name}}</text>
+          <text class="tool-tag">{{item.tag}}</text>
+        </view>
+        <text class="tool-desc">{{item.desc}}</text>
+        <text wx:if="{{item.preview}}" class="tool-preview">{{item.preview}}</text>
+      </view>
+      <text class="tool-arrow">→</text>
+      <view class="tool-corner tl"></view>
+      <view class="tool-corner br"></view>
+    </view>
+  </view>
+
+  <view class="tip-card">
+    <text class="tip-title">◈ 关于这些工具</text>
+    <text class="tip-text">三个工具都是小程序原生页面，计算全部由本机 JS 完成，点击卡片进入的是小程序内页面，不会打开任何外部网页。上方预览也是本地实时算出的结果。节假日数据与博客站点同步，断网时自动使用内置数据；倒计时事件、尺子校准值仅保存在本机，不会上传。尺子刻度带数字标注、支持全屏铺满，不联网、不申请权限，测量精度取决于校准结果。</text>
+  </view>
+
+  <view class="coming">
+    <view class="coming-line"></view>
+    <text class="coming-text">NATIVE FEATURES · 持续添加中</text>
+    <view class="coming-line"></view>
+  </view>
+
+</view>

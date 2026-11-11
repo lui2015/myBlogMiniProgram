@@ -1,0 +1,87 @@
+<view class="page">
+
+  <view class="hero">
+    <view class="hero-grid"></view>
+    <text class="hero-title">COUNTDOWN</text>
+    <text class="hero-sub">// 大事件倒计时 · 记录每一个重要时刻</text>
+    <view class="add-btn" bindtap="openAdd">+ 添加倒计时</view>
+  </view>
+
+  <view class="list-head">
+    <text class="sec-icon">◈</text>
+    <text class="sec-title">MY EVENTS</text>
+    <text class="head-count">{{events.length}} 个事件</text>
+  </view>
+
+  <view wx:if="{{!events.length}}" class="empty">
+    <text class="empty-icon">⏳</text>
+    <text class="empty-text">还没有倒计时事件</text>
+    <text class="empty-hint">点击上方按钮，记录一个重要时刻</text>
+  </view>
+
+  <view wx:else class="event-list">
+    <view
+      class="event-card {{item.isPast ? 'past' : ''}}"
+      wx:for="{{events}}"
+      wx:key="id"
+      style="border-left-color: {{item.themeColor}}"
+    >
+      <view class="ev-icon-wrap" style="border-color: {{item.themeColor}}">
+        <text class="ev-icon">{{item.icon}}</text>
+      </view>
+      <view class="ev-body">
+        <text class="ev-name">{{item.name}}</text>
+        <text class="ev-date">{{item.date}} · {{item.week}} · {{item.modeLabel}}</text>
+        <text class="ev-status">{{item.status}}</text>
+      </view>
+      <view class="ev-right">
+        <text class="ev-number" style="color: {{item.themeColor}}">{{item.value}}</text>
+        <text class="ev-unit">{{item.modeLabel}}</text>
+      </view>
+      <view class="ev-delete" catchtap="onDelete" data-id="{{item.id}}">✕</view>
+    </view>
+  </view>
+
+  <view class="tip">
+    <text class="tip-text">◈ 事件仅保存在本机，不会上传到服务器。工作日模式会自动排除周末、法定节假日并计入调休补班（{{holidaySource}}）。</text>
+  </view>
+
+  <!-- 添加弹窗 -->
+  <view wx:if="{{showAdd}}" class="modal-mask" bindtap="closeAdd">
+    <scroll-view class="modal" scroll-y catchtap="noop">
+      <text class="modal-title">添加倒计时</text>
+
+      <text class="form-label">事件名称</text>
+      <input class="form-input" value="{{form.name}}" bindinput="onNameInput" placeholder="例如：项目上线" placeholder-class="input-ph" maxlength="30" />
+
+      <text class="form-label">目标日期</text>
+      <picker mode="date" value="{{form.date}}" start="2020-01-01" end="2035-12-31" bindchange="onDateChange">
+        <view class="form-input">{{form.date}}</view>
+      </picker>
+
+      <text class="form-label">计算方式</text>
+      <view class="mode-seg">
+        <view class="seg-item {{form.mode === item.key ? 'active' : ''}}" wx:for="{{modes}}" wx:key="key" bindtap="onModeTap" data-mode="{{item.key}}">{{item.label}}</view>
+      </view>
+
+      <text class="form-label">选择图标</text>
+      <view class="icon-grid">
+        <view class="icon-item {{form.icon === item ? 'active' : ''}}" wx:for="{{icons}}" wx:key="*this" bindtap="onIconTap" data-icon="{{item}}">{{item}}</view>
+      </view>
+
+      <text class="form-label">卡片主题</text>
+      <view class="theme-row">
+        <view class="theme-item {{form.theme === item.key ? 'active' : ''}}" wx:for="{{themes}}" wx:key="key" bindtap="onThemeTap" data-key="{{item.key}}">
+          <view class="theme-dot" style="background-color: {{item.color}}"></view>
+          <text>{{item.label}}</text>
+        </view>
+      </view>
+
+      <view class="modal-actions">
+        <view class="modal-btn cancel" bindtap="closeAdd">取消</view>
+        <view class="modal-btn confirm" bindtap="onSubmit">确定</view>
+      </view>
+    </scroll-view>
+  </view>
+
+</view>

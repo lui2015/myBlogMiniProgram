@@ -1,0 +1,144 @@
+<view class="page page-top">
+
+  <view class="hero">
+    <view class="hero-grid"></view>
+    <text class="hero-title">WORKDAY CALCULATOR</text>
+    <text class="hero-sub">// 工作日计算器</text>
+  </view>
+
+  <!-- 模式切换 -->
+  <view class="mode-tabs">
+    <view class="mode-tab {{mode === 'range' ? 'active' : ''}}" bindtap="onModeTap" data-mode="range">日期区间 → 工作日数</view>
+    <view class="mode-tab {{mode === 'offset' ? 'active' : ''}}" bindtap="onModeTap" data-mode="offset">N 个工作日 → 日期</view>
+  </view>
+
+  <!-- 模式一 -->
+  <view wx:if="{{mode === 'range'}}" class="panel">
+    <view class="field-row">
+      <view class="field">
+        <text class="field-label">开始日期</text>
+        <picker mode="date" value="{{startDate}}" start="2020-01-01" end="2035-12-31" bindchange="onStartChange">
+          <view class="picker-value">{{startDate}}</view>
+        </picker>
+      </view>
+      <view class="field">
+        <text class="field-label">结束日期</text>
+        <picker mode="date" value="{{endDate}}" start="2020-01-01" end="2035-12-31" bindchange="onEndChange">
+          <view class="picker-value">{{endDate}}</view>
+        </picker>
+      </view>
+    </view>
+
+    <view class="switch-row">
+      <text class="switch-label">包含起止两端（闭区间）</text>
+      <switch checked="{{includeEnds}}" bindchange="onIncludeEndsChange" color="#00d4ff" />
+    </view>
+
+    <view class="preset-label">快捷区间</view>
+    <view class="preset-row">
+      <view class="preset-btn" wx:for="{{presets}}" wx:key="key" bindtap="onPresetTap" data-key="{{item.key}}">{{item.label}}</view>
+    </view>
+
+    <view wx:if="{{rangeStats}}" class="result-card">
+      <text class="result-label">{{rangeStats.label}}</text>
+      <view class="result-main">
+        <text class="result-number">{{rangeStats.workdays}}</text>
+        <text class="result-unit">个工作日</text>
+      </view>
+      <view class="result-grid">
+        <view class="result-item"><text class="ri-value">{{rangeStats.total}}</text><text class="ri-label">总天数</text></view>
+        <view class="result-item"><text class="ri-value">{{rangeStats.workday}}</text><text class="ri-label">普通工作日</text></view>
+        <view class="result-item"><text class="ri-value">{{rangeStats.weekend}}</text><text class="ri-label">周末</text></view>
+        <view class="result-item"><text class="ri-value">{{rangeStats.holiday}}</text><text class="ri-label">法定节假日</text></view>
+        <view class="result-item"><text class="ri-value">{{rangeStats.makeup}}</text><text class="ri-label">调休补班</text></view>
+      </view>
+      <view class="result-action" bindtap="copyResult">复制结果</view>
+    </view>
+
+    <!-- 日历可视化 -->
+    <view class="block-head"><text class="sec-icon">◈</text><text class="sec-title">CALENDAR</text><view class="sec-line"></view></view>
+    <view class="cal-card">
+      <view class="cal-title">{{calendarMonth}} · 日历可视化</view>
+      <view class="cal-week">
+        <text wx:for="{{weekLabels}}" wx:key="*this">{{item}}</text>
+      </view>
+      <view class="cal-grid">
+        <view
+          class="cal-cell {{item.empty ? 'empty' : item.type}} {{item.inRange ? 'in-range' : ''}} {{item.isEdge ? 'edge' : ''}} {{item.isToday ? 'today' : ''}}"
+          wx:for="{{calendar}}"
+          wx:key="key"
+        ><text wx:if="{{!item.empty}}">{{item.day}}</text></view>
+      </view>
+      <view class="cal-legend">
+        <text class="lg lg-workday">工作日</text>
+        <text class="lg lg-weekend">周末</text>
+        <text class="lg lg-holiday">法定节假日</text>
+        <text class="lg lg-makeup">调休补班</text>
+      </view>
+    </view>
+
+    <view wx:if="{{hitGroups.length}}" class="holiday-hit">
+      <text class="hit-title">区间内命中的节假日</text>
+      <view class="hit-row" wx:for="{{hitGroups}}" wx:key="start">
+        <text class="hit-name">{{item.name}}</text>
+        <text class="hit-date">{{item.start}} ~ {{item.end}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 模式二 -->
+  <view wx:else class="panel">
+    <view class="field-row">
+      <view class="field">
+        <text class="field-label">起始日期</text>
+        <picker mode="date" value="{{baseDate}}" start="2020-01-01" end="2035-12-31" bindchange="onBaseChange">
+          <view class="picker-value">{{baseDate}}</view>
+        </picker>
+      </view>
+      <view class="field">
+        <text class="field-label">工作日数（支持负数）</text>
+        <input class="num-input" type="text" value="{{offsetDays}}" bindinput="onOffsetInput" placeholder="例如 7 或 -7" placeholder-class="input-ph" />
+      </view>
+    </view>
+
+    <view class="switch-row">
+      <text class="switch-label">包含起始日（把起始日算作第 1 天）</text>
+      <switch checked="{{includeStart}}" bindchange="onIncludeStartChange" color="#00d4ff" />
+    </view>
+
+    <view class="preset-label">常用</view>
+    <view class="preset-row">
+      <view class="preset-btn" wx:for="{{offsetPresets}}" wx:key="*this" bindtap="onOffsetPresetTap" data-value="{{item}}">{{item > 0 ? '+' : ''}}{{item}}</view>
+    </view>
+
+    <view wx:if="{{offsetResult}}" class="result-card">
+      <text class="result-label">{{offsetResult.label}}</text>
+      <view class="result-date">{{offsetResult.date}}</view>
+      <view class="result-meta">{{offsetResult.week}} · {{offsetResult.typeName}} · 相距 {{offsetResult.span}} 个自然日</view>
+      <view class="result-action" bindtap="copyResult">复制结果</view>
+    </view>
+  </view>
+
+  <!-- 年度节假日一览 -->
+  <view class="block-head"><text class="sec-icon">◈</text><text class="sec-title">HOLIDAYS {{currentYear}}</text><view class="sec-line"></view></view>
+  <view class="year-row">
+    <text class="year-label">年份</text>
+    <picker mode="selector" range="{{years}}" value="{{yearIndex}}" bindchange="onYearChange">
+      <view class="year-picker">{{currentYear}} ▾</view>
+    </picker>
+    <text class="source-tag">{{holidaySource}}</text>
+  </view>
+
+  <view class="holiday-list">
+    <view class="holiday-row" wx:for="{{yearGroups}}" wx:key="key" bindtap="onGroupTap" data-start="{{item.start}}" data-end="{{item.end}}">
+      <view class="hr-top">
+        <text class="hr-name">{{item.name}}</text>
+        <text class="hr-days">放假 {{item.days}} 天 · {{item.distanceText}}</text>
+      </view>
+      <text class="hr-date">{{item.start}} ~ {{item.end}}</text>
+      <text wx:if="{{item.makeupText}}" class="hr-makeup">{{item.makeupText}}</text>
+    </view>
+  </view>
+  <text class="foot-hint">数据来源：国务院办公厅《节假日放假安排通知》。点击某一行可回填到计算器。</text>
+
+</view>

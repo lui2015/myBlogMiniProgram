@@ -9,7 +9,9 @@ Page({
     error: ''
   },
 
-  onLoad() {
+  onLoad(options) {
+    // 从「作品」Tab 全站搜索进入时，带上同一个关键词
+    if (options && options.q) this.setData({ keyword: options.q })
     this.load()
   },
 

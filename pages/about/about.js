@@ -1,62 +1,80 @@
 const api = require('../../utils/api')
-const { resolveUrl, resolveFields } = require('../../utils/util')
+const aboutUtil = require('../../utils/about')
 
-const DEFAULT_COLOR = '#00d4ff'
-
-function safeColor(color) {
-  return /^#[0-9a-fA-F]{3,8}$/.test(color || '') ? color : DEFAULT_COLOR
+function clockText() {
+  const d = new Date()
+  const pad = n => ('0' + n).slice(-2)
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
 }
 
 Page({
-  data: {
-    hero: {},
-    stats: [],
-    softwares: [],
-    myskills: [],
+  data: Object.assign({}, aboutUtil.UI_TEXT, {
+    name: '',
+    role: '',
+    bio: '',
+    avatarUrl: '',
+    heroAvatarUrl: '',
+    avatarText: '',
     socials: [],
+    skillTree: [],
+    timeline: [],
     loading: true,
-    error: ''
-  },
+    offline: false,
+    empty: false,
+    error: '',
+    syncText: '等待接口数据'
+  }),
 
   onLoad() {
+    this.lastRemote = null
+    this.lastSyncAt = ''
+    this.lastError = ''
+    this.hasShown = false
     this.load()
   },
 
-  onPullDownRefresh() {
-    this.load().then(() => wx.stopPullDownRefresh())
+  // 每次回到该 Tab 都静默重新请求，后台改完数据无需重新编译
+  onShow() {
+    if (this.hasShown) this.load(true)
+    this.hasShown = true
   },
 
-  load() {
-    this.setData({ loading: true, error: '' })
+  onPullDownRefresh() {
+    this.load(true).then(() => wx.stopPullDownRefresh())
+  },
 
-    const tasks = [
-      api.getHero().then(hero => {
-        this.setData({
-          hero: Object.assign({}, hero, { avatarUrl: resolveUrl(hero.avatarUrl) })
-        })
-      }),
-      api.getList('stats').then(res => this.setData({ stats: res.items })),
-      api.getList('softwares').then(res => {
-        this.setData({ softwares: resolveFields(res.items, ['image']) })
-      }),
-      api.getList('myskills').then(res => this.setData({ myskills: res.items })),
-      api.getList('socialMedia').then(res => {
-        const socials = resolveFields(res.items, ['qr']).map(item =>
-          Object.assign({}, item, { color: safeColor(item.color) })
-        )
-        this.setData({ socials })
-      })
-    ]
+  // silent 模式保留当前内容不闪屏；接口失败时沿用上次成功同步的数据
+  load(silent) {
+    if (!silent) this.setData({ loading: true })
+    this.setData({ offline: false, error: '' })
 
-    let failures = 0
-    return Promise.all(tasks.map(task => task.catch(err => {
-      console.warn('[about]', err)
-      failures++
-    }))).then(() => {
-      this.setData({
+    const aboutReq = api.getAbout().catch(err => {
+      console.warn('[about] /api/open/about 读取失败', err)
+      this.lastError = (err && err.message) || '网络异常'
+      return null
+    })
+    const heroReq = api.getHero().catch(err => {
+      console.warn('[about] /api/open/hero 读取失败', err)
+      return {}
+    })
+
+    return Promise.all([aboutReq, heroReq]).then(([about, hero]) => {
+      const ok = about && Object.keys(about).length > 0
+      if (ok) {
+        this.lastRemote = about
+        this.lastSyncAt = clockText()
+      }
+      const source = ok ? about : this.lastRemote
+      const data = aboutUtil.normalize(source, hero)
+      this.setData(Object.assign({}, data, {
         loading: false,
-        error: failures === tasks.length ? '数据加载失败，请检查网络与合法域名配置' : ''
-      })
+        offline: !ok,
+        empty: !source,
+        error: ok ? '' : (source ? '接口暂时不可用' : (this.lastError || '加载失败')),
+        syncText: ok
+          ? `接口实时同步 · ${this.lastSyncAt}`
+          : (source ? `上次同步 ${this.lastSyncAt} · 当前离线` : '等待接口数据')
+      }))
     })
   },
 
@@ -64,40 +82,27 @@ Page({
     this.load()
   },
 
-  copyUrl(e) {
-    const url = e.currentTarget.dataset.url
-    if (!url) return
-    wx.setClipboardData({
-      data: url,
-      success: () => wx.showToast({ title: '链接已复制', icon: 'none' })
-    })
-  },
-
-  previewQr(e) {
-    const qr = e.currentTarget.dataset.qr
-    if (!qr) {
-      wx.showToast({ title: '暂无二维码', icon: 'none' })
-      return
+  // about.avatar 加载失败时回退 hero.avatarUrl，仍失败则显示文字头像
+  onAvatarError() {
+    const fallback = this.data.heroAvatarUrl
+    if (fallback && fallback !== this.data.avatarUrl) {
+      this.setData({ avatarUrl: fallback })
+    } else {
+      this.setData({ avatarUrl: '' })
     }
-    wx.previewImage({
-      current: qr,
-      urls: [qr],
-      fail: () => wx.showToast({ title: '二维码加载失败', icon: 'none' })
-    })
   },
 
-  copyBlogLink() {
+  // 社交地址只做中性复制，不跳转外部网页
+  onSocialTap(e) {
+    const { value, label } = e.currentTarget.dataset
+    if (!value) return
     wx.setClipboardData({
-      data: 'https://www.luliming.xyz',
-      success: () => wx.showToast({ title: '链接已复制，可在浏览器打开', icon: 'none' })
+      data: value,
+      success: () => wx.showToast({ title: label ? `已复制 ${label}` : '已复制', icon: 'none' })
     })
   },
 
   onShareAppMessage() {
-    const { hero } = this.data
-    return {
-      title: hero.subtitle || '鲁力铭',
-      path: '/pages/about/about'
-    }
+    return { title: '关于我 · 鲁力铭', path: '/pages/about/about' }
   }
 })

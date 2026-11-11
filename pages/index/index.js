@@ -1,5 +1,9 @@
 const api = require('../../utils/api')
 const { resolveUrl, resolveFields } = require('../../utils/util')
+const config = require('../../utils/config')
+const categories = require('../../utils/categories')
+
+const SKILL_PREVIEW = 5
 
 Page({
   data: {
@@ -7,10 +11,15 @@ Page({
     photos: [],
     poem: null,
     videos: [],
-    skills: [],
+    mySkills: [],
+    mySkillsMore: false,
+    mySkillsTotal: 0,
     works: [],
+    softwares: [],
+    showSoftware: config.showSoftwareOnHome,
     quote: null,
-    counts: { article: 0, album: 0, video: 0 },
+    counts: { article: 0, album: 0, video: 0, poem: 0, quote: 0, software: 0 },
+    guides: categories.withCounts({}),
     loading: true
   },
 
@@ -32,12 +41,20 @@ Page({
       this.loadPhotos(),
       this.loadPoems(),
       this.loadVideos(),
-      this.loadSkills(),
+      this.loadMySkills(),
       this.loadWorks(),
+      this.loadSoftwares(),
       this.loadQuotes(),
       this.loadAlbumCount()
     ]
-    return Promise.all(tasks).then(() => this.setData({ loading: false }))
+    return Promise.all(tasks).then(() => {
+      this.refreshGuides()
+      this.setData({ loading: false })
+    })
+  },
+
+  refreshGuides() {
+    this.setData({ guides: categories.withCounts(this.data.counts) })
   },
 
   loadHero() {
@@ -60,6 +77,7 @@ Page({
     return api.getList('poems')
       .then(res => {
         this.poems = res.items || []
+        this.setData({ 'counts.poem': res.total })
         this.randomPoem()
       })
       .catch(err => console.warn('[poems]', err))
@@ -76,10 +94,33 @@ Page({
       .catch(err => console.warn('[videos]', err))
   },
 
-  loadSkills() {
-    return api.getList('skills')
-      .then(res => this.setData({ skills: res.items }))
-      .catch(err => console.warn('[skills]', err))
+  loadMySkills() {
+    return api.getList('myskills', { pageSize: 200 })
+      .then(res => {
+        const items = res.items || []
+        this.allMySkills = items
+        this.setData({
+          mySkills: items.slice(0, SKILL_PREVIEW),
+          mySkillsMore: items.length > SKILL_PREVIEW,
+          mySkillsTotal: Number(res.total) || items.length
+        })
+      })
+      .catch(err => console.warn('[myskills]', err))
+  },
+
+  goMySkills() {
+    wx.navigateTo({ url: '/pages/myskills/myskills' })
+  },
+
+  onMySkillTap(e) {
+    const id = e.currentTarget.dataset.id
+    const item = (this.allMySkills || []).find(skill => skill.id === id)
+    const url = item && String(item.url || '').trim()
+    if (!url || !/^https?:\/\//i.test(url)) return
+    wx.setClipboardData({
+      data: url,
+      success: () => wx.showToast({ title: '已复制技能地址', icon: 'none' })
+    })
   },
 
   loadWorks() {
@@ -93,10 +134,21 @@ Page({
       .catch(err => console.warn('[works]', err))
   },
 
+  loadSoftwares() {
+    if (!config.showSoftwareOnHome) return Promise.resolve()
+    return api.getList('softwares')
+      .then(res => this.setData({
+        softwares: resolveFields(res.items, ['image']),
+        'counts.software': res.total
+      }))
+      .catch(err => console.warn('[softwares]', err))
+  },
+
   loadQuotes() {
     return api.getPage('quotes', 1, 20)
       .then(res => {
         this.quotes = res.items || []
+        this.setData({ 'counts.quote': res.total })
         this.randomQuote()
       })
       .catch(err => console.warn('[quotes]', err))
@@ -136,34 +188,36 @@ Page({
   },
 
   goCategory(e) {
-    const type = e.currentTarget.dataset.type
-    if (type === 'article') {
-      wx.switchTab({ url: '/pages/works/works' })
-    } else if (type === 'album') {
-      wx.switchTab({ url: '/pages/albums/albums' })
-    } else {
-      wx.navigateTo({ url: '/pages/videos/videos' })
-    }
+    const item = categories.byKey(e.currentTarget.dataset.key)
+    if (!item) return
+    if (item.tab) wx.switchTab({ url: item.path })
+    else wx.navigateTo({ url: item.path })
   },
 
-  goPoems() {
-    wx.navigateTo({ url: '/pages/poems/poems' })
-  },
-
-  goQuotes() {
-    wx.navigateTo({ url: '/pages/quotes/quotes' })
+  goAllWorks() {
+    wx.switchTab({ url: '/pages/works/works' })
   },
 
   goVideos() {
     wx.navigateTo({ url: '/pages/videos/videos' })
   },
 
-  goAbout() {
-    wx.switchTab({ url: '/pages/about/about' })
-  },
-
   goWorkDetail(e) {
     wx.navigateTo({ url: `/pages/detail/detail?id=${e.currentTarget.dataset.id}` })
+  },
+
+  onWorkCoverError(e) {
+    const index = Number(e.currentTarget.dataset.index)
+    if (!Number.isInteger(index) || index < 0 || index >= this.data.works.length) return
+    this.setData({ [`works[${index}].cover`]: '' })
+  },
+
+  // 点击作品卡片进入列表页并自动展开对应详情；「查看全部」不传 id
+  goSoftwares(e) {
+    const id = e.currentTarget.dataset.id
+    wx.navigateTo({
+      url: `/pages/softwares/softwares${id ? '?id=' + encodeURIComponent(id) : ''}`
+    })
   },
 
   previewPhoto(e) {

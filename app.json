@@ -3,6 +3,12 @@
     "pages/index/index",
     "pages/works/works",
     "pages/detail/detail",
+    "pages/tools/tools",
+    "pages/workday/workday",
+    "pages/countdown/countdown",
+    "pages/ruler/ruler",
+    "pages/softwares/softwares",
+    "pages/myskills/myskills",
     "pages/albums/albums",
     "pages/album/album",
     "pages/videos/videos",
@@ -31,15 +37,15 @@
       },
       {
         "pagePath": "pages/works/works",
-        "text": "文章",
+        "text": "作品",
         "iconPath": "images/article.png",
         "selectedIconPath": "images/article-active.png"
       },
       {
-        "pagePath": "pages/albums/albums",
-        "text": "相册",
-        "iconPath": "images/album.png",
-        "selectedIconPath": "images/album-active.png"
+        "pagePath": "pages/tools/tools",
+        "text": "工具",
+        "iconPath": "images/tools.png",
+        "selectedIconPath": "images/tools-active.png"
       },
       {
         "pagePath": "pages/about/about",

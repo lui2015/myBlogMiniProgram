@@ -12,8 +12,9 @@ Page({
     error: ''
   },
 
-  onLoad() {
+  onLoad(options) {
     this.allVideos = []
+    this.keyword = (options && options.q) || ''
     this.load()
   },
 
@@ -23,7 +24,7 @@ Page({
 
   load() {
     this.setData({ loading: true, error: '' })
-    return api.getList('videos')
+    return api.getList('videos', this.keyword ? { q: this.keyword } : {})
       .then(res => {
         this.allVideos = resolveFields(res.items, ['cover', 'src'])
         const categories = ['全部']
