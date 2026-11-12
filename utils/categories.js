@@ -25,6 +25,11 @@ const CATEGORIES = [
     key: 'software', name: '软件', en: 'SOFTWARE', icon: '🧩',
     desc: '做过的网页与应用小工具', unit: '个',
     section: 'softwares', path: '/pages/softwares/softwares', tab: false, tone: 'pink'
+  },
+  {
+    key: 'skill', name: '技能', en: 'SKILLS', icon: '⚡',
+    desc: '沉淀的方法论与可复用技能', unit: '项',
+    section: 'myskills', path: '/pages/myskills/myskills', tab: false, tone: 'purple'
   }
 ]
 

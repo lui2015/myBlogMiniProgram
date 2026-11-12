@@ -18,7 +18,7 @@
 说明：
 
 - `request` 用于调用所有 `/api/open/...` 接口，以及站点节假日数据 `/workday/holidays.json`。
-- `downloadFile` 用于 `wx.previewImage` 预览照片、文章封面、相册图片、软件作品封面。
+- `downloadFile` 用于 `wx.previewImage` 预览照片、文章封面、相册图片、软件作品封面、自媒体二维码、技能证书。
 - 站点图片里还有 `picsum.photos`（示例占位图），如后续换成其他图床，需同步加入白名单。
 - 域名必须 HTTPS、已备案、不带端口和路径。
 - **开发阶段**可在微信开发者工具「详情 → 本地设置」勾选 **不校验合法域名** 临时调试。
@@ -28,10 +28,10 @@
 | 页面 | 路径 | 使用的接口模块 |
 |------|------|----------------|
 | 首页 | `pages/index/index` | `hero` `photos` `poems` `myskills` `works` `softwares` `quotes` `albums` |
-| 作品（分类导览 + 全站搜索 + 文章） | `pages/works/works` | 5 类作品（`q` 并发搜索）+ `/api/open` 索引 + `works`（分类筛选） |
+| 作品（分类导览 + 全站搜索 + 文章） | `pages/works/works` | 6 类作品（`q` 并发搜索）+ `/api/open` 索引 + `works`（分类筛选） |
 | 文章详情 | `pages/detail/detail` | `works/{id}`，Markdown 正文解析渲染 |
 | 软件作品 | `pages/softwares/softwares` | `softwares`（网格 + 详情弹层） |
-| 技能作品 | `pages/myskills/myskills` | `myskills`（全量列表 + 复制地址） |
+| 技能作品 | `pages/myskills/myskills` | `myskills`（全量列表 + `q` 搜索 + 复制地址） |
 | 工具集合 | `pages/tools/tools` | 本地工具入口 |
 | 工作日计算器 | `pages/workday/workday` | `/workday/holidays.json` + 内置兜底数据 |
 | 大事件倒计时 | `pages/countdown/countdown` | 本地存储 + 工作日计算 |
@@ -40,19 +40,33 @@
 | 相册详情 | `pages/album/album` | `albums/{id}` |
 | 诗词 | `pages/poems/poems` | `poems`（`q` 搜索） |
 | 我的思考 | `pages/quotes/quotes` | `quotes`（分页加载，共 146 条） |
-| 关于 | `pages/about/about` | `about`（单例对象）+ `hero`（头像兜底） |
+| 关于 | `pages/about/about` | `about`（单例对象）+ `hero`（头像兜底）+ `socialMedia`（二维码卡片） |
 
 底部 TabBar：**首页 / 作品 / 工具 / 关于**。相册已改为二级页面，从首页或「作品」Tab 的分类导览进入。
 
-> 「关于我」的姓名、职位、简介、头像、社交链接、SKILL TREE、TIMELINE 全部来自 `GET /api/open/about`（文档 4.10）。请求带 `_t` 时间戳防缓存，页面**每次显示（含 Tab 切回）**与下拉刷新都会重新拉取，底部显示同步时间与「刷新数据」按钮；`utils/about.js` 只做字段归一化，不内置任何静态内容，后台把字段清空时小程序同步清空。接口暂时不可用时显示上次成功同步的数据并标注「当前离线」，从未成功过则显示错误与重试；头像优先 `about.avatar`，加载失败回退 `hero.avatarUrl`，再回退文字头像。
+> 「关于我」的姓名、职位、简介、头像、SKILL TREE、TIMELINE 全部来自 `GET /api/open/about`（文档 4.10）；底部 SOCIAL MEDIA 卡片来自 `GET /api/open/socialMedia`。请求带 `_t` 时间戳防缓存，页面**每次显示（含 Tab 切回）**与下拉刷新都会重新拉取，底部显示同步时间与「刷新数据」按钮；`utils/about.js` 只做字段归一化，不内置任何静态内容，后台把字段清空时小程序同步清空。接口暂时不可用时显示上次成功同步的数据并标注「当前离线」，从未成功过则显示错误与重试；头像优先 `about.avatar`，加载失败回退 `hero.avatarUrl`，再回退文字头像。
+
+## SKILL TREE 技能标签
+
+`about.skillTree` 已升级为 `{ id, name, certificate }[]`（线上当前 8 项），`utils/about.js` 同时兼容历史 `string[]`。标签按接口顺序以 4 列展示；`certificate` 非空时标签右上角显示 📜，点击用 `wx.previewImage` 预览证书大图，空值则不响应。证书地址由 `utils/util.js` 补全并过滤危险协议。
+
+## 关于我底部区块
+
+- **SOCIAL MEDIA**：2 列卡片，数据来自 `GET /api/open/socialMedia`（接口当前 6 个平台：`name` / `icon` / `desc` / `qr` / `color`）。点击卡片用 `wx.previewImage` 预览对应二维码（可长按识别），不跳转第三方平台；`qr` 为站内相对路径时由 `utils/util.js` 补全，`color` 仅接受 `#rrggbb` 并用于卡片顶部描边。卡片数量与顺序完全跟随接口。
+- **VISIT BLOG**：展示站点地址，优先取接口的 `blogUrl` / `website`，否则用 `utils/api.js` 的 `BASE_URL`；点击复制，不引导打开浏览器。
 
 ## 分类导览
 
-5 个内容分类（文章 / 相册 / 诗词 / 我的思考 / 软件）统一由 `utils/categories.js` 维护：名称、英文、图标、引导文案、单位、目标路径与对应 API 模块；数量取自 `GET /api/open` 索引里各模块的 `count`。视频模块已按个人主体类目要求移除。
+6 个内容分类（文章 / 相册 / 诗词 / 我的思考 / 软件 / 技能）统一由 `utils/categories.js` 维护：名称、英文、图标、引导文案、单位、目标路径与对应 API 模块；数量取自 `GET /api/open` 索引里各模块的 `count`。「技能」对应 `myskills` 模块与 `pages/myskills/myskills` 列表页；视频模块已按个人主体类目要求移除。
 
-- **首页**：`CATEGORY GUIDE` 横向滑动卡片作为快捷引导，右上角「全部作品」进入作品 Tab。
+- **首页**：`CATEGORY GUIDE` 横向滑动卡片作为快捷引导，右上角「全部作品」进入作品 Tab；卡片数量文案由 `guides.length` 动态生成。
 - **作品 Tab**：2 列分类网格，点击非文章分类进入对应二级页；点击「文章」滚动到本页下方的文章列表（分类筛选保持不变）。
-- **全站搜索**：作品 Tab 的搜索框并发查询 `works / albums / poems / quotes / softwares` 五个模块的 `q` 参数，结果按类型分组（每组最多 5 条，显示总条数）。文章 / 相册 / 软件进详情页，诗词 / 思考进对应列表页并带上同一关键词；「查看全部」同理，文章组则清空搜索回到本页列表。清空关键词恢复文章列表。搜索期间有防抖、过期结果丢弃，单个模块失败不影响其它类型。
+- **全站搜索**：作品 Tab 的搜索框并发查询 `works / albums / poems / quotes / softwares / myskills` 六个模块的 `q` 参数，结果按类型分组（每组最多 5 条，显示总条数）。文章 / 相册 / 软件进详情页，诗词 / 思考 / 技能进对应列表页并带上同一关键词；「查看全部」同理，文章组则清空搜索回到本页列表。清空关键词恢复文章列表。搜索期间有防抖、过期结果丢弃，单个模块失败不影响其它类型。
+
+## 首页「查看更多」入口
+
+- 照片、文章、诗词、思考四个区块标题栏右侧的「查看更多 →」复用 `utils/categories.js` 的路径：照片 → `pages/albums/albums`（相册列表），文章 → `pages/works/works`（作品 Tab，用 `switchTab`），诗词 → `pages/poems/poems`，思考 → `pages/quotes/quotes`。
+- 诗词卡片「⟳ 换一首」与思考卡片「⟳ 换一句」在本页已加载的列表里随机切换，并避免连续显示同一条；数据来自 `poems` / `quotes` 接口，下拉刷新可重新拉取。
 
 ## 首页文章作品（LATEST WORKS）
 
@@ -106,9 +120,9 @@
 - **只读展示**：只调用 `GET` 接口，不含任何 `POST/PUT/DELETE`；小程序端不写入站点数据。
 - **不含凭据**：项目里没有管理员账号密码、AppSecret 等敏感信息。
 - 正文由结构化 blocks 交给原生组件渲染，不拼接 HTML 字符串；外部颜色值经格式校验后才用于样式。
-- 社交地址、作品地址仅做中性的「复制」交互，不引导跳转浏览器或第三方平台；「关于我」的社交链接来自 `about.socialLinks`，复制前会去掉 `mailto:` 前缀并过滤危险协议。
-- 倒计时事件、尺子校准值仅存本机、不上传，不构成用户发布内容；尺子不联网、不申请定位或相机等权限；「关于我」不含软件下载与二维码引流。金融投资类内容仅集中在首页 SOFTWARE 模块，可通过 `utils/config.js` 一键隐藏。
-- **不含视频服务**：首页视频区块、视频列表页、`<video>` 播放组件及 `videos` 接口调用已全部移除，分类导览与全站搜索也不再包含视频类型，避免个人主体小程序涉及未开放的视频服务类目。
+- 作品地址、站点地址仅做中性的「复制」交互，不引导跳转浏览器或第三方平台；VISIT BLOG 的站点地址只允许 http/https。底部 SOCIAL MEDIA 的二维码来自 `socialMedia` 模块，仅用 `wx.previewImage` 预览站内图片，不跳转第三方平台；颜色值经 `#rrggbb` 白名单校验，二维码地址由 `resolveUrl` 过滤危险协议。
+- 倒计时事件、尺子校准值仅存本机、不上传，不构成用户发布内容；尺子不联网、不申请定位或相机等权限；「关于我」不含软件下载。金融投资类内容仅集中在首页 SOFTWARE 模块，可通过 `utils/config.js` 一键隐藏。
+- **不含视频服务**：首页视频区块、视频列表页、`<video>` 播放组件及 `videos` 接口调用已全部移除，分类导览与全站搜索也不再包含视频类型；SOCIAL MEDIA 仅展示平台二维码，不提供任何视频播放能力，避免个人主体小程序涉及未开放的视频服务类目。
 
 ## 已知数据情况
 

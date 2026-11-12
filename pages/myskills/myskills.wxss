@@ -72,6 +72,16 @@
   background: linear-gradient(90deg, rgba(168, 85, 247, 0.35), transparent);
 }
 
+.search-banner {
+  margin: 0 32rpx 24rpx;
+  padding: 16rpx 20rpx;
+  font-size: 21rpx;
+  color: #8a8a9a;
+  background-color: rgba(168, 85, 247, 0.08);
+  border-left: 3rpx solid rgba(168, 85, 247, 0.5);
+  border-radius: 0 8rpx 8rpx 0;
+}
+
 .skill-list {
   padding: 0 32rpx;
 }

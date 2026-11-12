@@ -32,16 +32,6 @@
         <text class="profile-name">{{name}}</text>
         <text wx:if="{{role}}" class="profile-role">{{role}}</text>
         <text wx:if="{{bio}}" class="profile-bio">{{bio}}</text>
-        <view class="social-row">
-          <view
-            class="social-btn"
-            wx:for="{{socials}}"
-            wx:key="key"
-            bindtap="onSocialTap"
-            data-value="{{item.value}}"
-            data-label="{{item.label}}"
-          ><text>{{item.icon}}</text></view>
-        </view>
       </view>
     </view>
 
@@ -54,8 +44,15 @@
         <view class="tree-line"></view>
       </view>
       <view class="skill-grid">
-        <view class="skill-chip" wx:for="{{skillTree}}" wx:key="*this">
-          <text>{{item}}</text>
+        <view
+          class="skill-chip {{item.certificate ? 'has-cert' : ''}}"
+          wx:for="{{skillTree}}"
+          wx:key="id"
+          bindtap="onSkillTap"
+          data-certificate="{{item.certificate}}"
+        >
+          <text>{{item.name}}</text>
+          <text wx:if="{{item.certificate}}" class="skill-cert">📜</text>
         </view>
       </view>
     </view>
@@ -77,6 +74,43 @@
             <text class="tl-desc">{{item.desc}}</text>
           </view>
         </view>
+      </view>
+    </view>
+
+    <!-- SOCIAL MEDIA -->
+    <view wx:if="{{socialCards.length}}" class="cy-section">
+      <view class="sec-header">
+        <text class="sec-icon">◈</text>
+        <text class="sec-title">SOCIAL MEDIA</text>
+        <view class="sec-line"></view>
+      </view>
+      <view class="social-grid">
+        <view
+          class="social-card"
+          wx:for="{{socialCards}}"
+          wx:key="id"
+          style="{{item.styleText}}"
+          bindtap="onSocialCardTap"
+          data-qr="{{item.qr}}"
+        >
+          <text class="social-icon">{{item.icon}}</text>
+          <text class="social-name">{{item.name}}</text>
+          <text class="social-desc">{{item.desc}}</text>
+        </view>
+      </view>
+      <text class="social-tip">点击卡片可查看二维码</text>
+    </view>
+
+    <!-- VISIT BLOG -->
+    <view wx:if="{{blogUrl}}" class="cy-section">
+      <view class="sec-header">
+        <text class="sec-icon">◈</text>
+        <text class="sec-title">VISIT BLOG</text>
+        <view class="sec-line"></view>
+      </view>
+      <view class="blog-card" bindtap="onBlogTap" data-value="{{blogUrl}}">
+        <text class="blog-url">{{blogUrl}}</text>
+        <text class="blog-hint">点击复制站点地址</text>
       </view>
     </view>
 

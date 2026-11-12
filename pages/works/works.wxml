@@ -47,7 +47,7 @@
       <text class="search-icon">⌕</text>
       <input
         class="search-input"
-        placeholder="搜索全部作品 · 文章/相册/诗词/思考/软件"
+        placeholder="搜索全部作品 · 文章/相册/诗词/思考/软件/技能"
         placeholder-class="search-ph"
         value="{{keyword}}"
         bindinput="onSearchInput"

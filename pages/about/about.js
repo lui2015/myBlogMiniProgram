@@ -16,6 +16,8 @@ Page({
     heroAvatarUrl: '',
     avatarText: '',
     socials: [],
+    socialCards: [],
+    blogUrl: '',
     skillTree: [],
     timeline: [],
     loading: true,
@@ -57,8 +59,15 @@ Page({
       console.warn('[about] /api/open/hero 读取失败', err)
       return {}
     })
+    // 自媒体平台与二维码单独取；失败时返回 null，保留上次渲染结果
+    const socialReq = api.getList('socialMedia')
+      .then(res => res.items || [])
+      .catch(err => {
+        console.warn('[about] /api/open/socialMedia 读取失败', err)
+        return null
+      })
 
-    return Promise.all([aboutReq, heroReq]).then(([about, hero]) => {
+    return Promise.all([aboutReq, heroReq, socialReq]).then(([about, hero, socialItems]) => {
       const ok = about && Object.keys(about).length > 0
       if (ok) {
         this.lastRemote = about
@@ -66,6 +75,7 @@ Page({
       }
       const source = ok ? about : this.lastRemote
       const data = aboutUtil.normalize(source, hero)
+      if (socialItems) data.socialCards = aboutUtil.normalizeSocialMedia(socialItems)
       this.setData(Object.assign({}, data, {
         loading: false,
         offline: !ok,
@@ -92,13 +102,31 @@ Page({
     }
   },
 
-  // 社交地址只做中性复制，不跳转外部网页
-  onSocialTap(e) {
-    const { value, label } = e.currentTarget.dataset
+  // 点击自媒体卡片预览对应二维码，不跳转第三方平台
+  onSocialCardTap(e) {
+    const qr = e.currentTarget.dataset.qr
+    if (!qr) {
+      wx.showToast({ title: '暂无二维码', icon: 'none' })
+      return
+    }
+    const urls = this.data.socialCards.map(item => item.qr).filter(Boolean)
+    wx.previewImage({ current: qr, urls: urls.length ? urls : [qr] })
+  },
+
+  // SKILL TREE 标签带证书时预览大图，无证书不响应
+  onSkillTap(e) {
+    const certificate = e.currentTarget.dataset.certificate
+    if (!certificate) return
+    const urls = this.data.skillTree.map(item => item.certificate).filter(Boolean)
+    wx.previewImage({ current: certificate, urls: urls.length ? urls : [certificate] })
+  },
+
+  onBlogTap(e) {
+    const value = e.currentTarget.dataset.value
     if (!value) return
     wx.setClipboardData({
       data: value,
-      success: () => wx.showToast({ title: label ? `已复制 ${label}` : '已复制', icon: 'none' })
+      success: () => wx.showToast({ title: '已复制站点地址', icon: 'none' })
     })
   },
 

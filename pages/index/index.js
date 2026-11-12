@@ -89,7 +89,8 @@ Page({
         this.setData({
           mySkills: items.slice(0, SKILL_PREVIEW),
           mySkillsMore: items.length > SKILL_PREVIEW,
-          mySkillsTotal: Number(res.total) || items.length
+          mySkillsTotal: Number(res.total) || items.length,
+          'counts.skill': Number(res.total) || items.length
         })
       })
       .catch(err => console.warn('[myskills]', err))
@@ -172,6 +173,16 @@ Page({
   randomQuote() {
     if (!this.quotes.length) return
     this.setData({ quote: this.quotes[Math.floor(Math.random() * this.quotes.length)] })
+  },
+
+  changeQuote() {
+    if (this.quotes.length < 2) return this.randomQuote()
+    const current = this.data.quote && this.data.quote.id
+    let next = this.quotes[Math.floor(Math.random() * this.quotes.length)]
+    if (next.id === current) {
+      next = this.quotes[(this.quotes.indexOf(next) + 1) % this.quotes.length]
+    }
+    this.setData({ quote: next })
   },
 
   goCategory(e) {

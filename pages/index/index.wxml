@@ -54,7 +54,7 @@
       </view>
     </scroll-view>
 
-    <text class="guide-tip">6 个内容分类 · 左右滑动查看 · 点击卡片进入对应作品页</text>
+    <text class="guide-tip">{{guides.length}} 个内容分类 · 左右滑动查看 · 点击卡片进入对应作品页</text>
   </view>
 
   <!-- ====== 照片 PHOTO FRAME ====== -->
@@ -63,6 +63,7 @@
       <text class="sec-icon">◈</text>
       <text class="sec-title">PHOTO FRAME</text>
       <view class="sec-line"></view>
+      <view class="sec-more" bindtap="goCategory" data-key="album">查看更多 →</view>
     </view>
     <swiper wx:if="{{photos.length}}" class="photo-swiper" indicator-dots indicator-color="rgba(255,255,255,0.2)" indicator-active-color="#00d4ff" circular autoplay interval="{{4500}}" duration="{{500}}">
       <swiper-item wx:for="{{photos}}" wx:key="id">
@@ -87,6 +88,7 @@
       <text class="sec-icon">◈</text>
       <text class="sec-title">LATEST WORKS</text>
       <view class="sec-line"></view>
+      <view class="sec-more" bindtap="goCategory" data-key="article">查看更多 →</view>
     </view>
     <view wx:if="{{works.length}}" class="work-list">
       <view class="work-card" wx:for="{{works}}" wx:for-index="workIndex" wx:key="id" bindtap="goWorkDetail" data-id="{{item.id}}">
@@ -133,6 +135,7 @@
       <text class="sec-icon">◈</text>
       <text class="sec-title">POETRY MODULE</text>
       <view class="sec-line"></view>
+      <view class="sec-more" bindtap="goCategory" data-key="poem">查看更多 →</view>
     </view>
     <view wx:if="{{poem}}" class="poem-card">
       <view class="poem-head">
@@ -158,11 +161,15 @@
       <text class="sec-icon">◈</text>
       <text class="sec-title">MY THOUGHTS</text>
       <view class="sec-line"></view>
+      <view class="sec-more" bindtap="goCategory" data-key="quote">查看更多 →</view>
     </view>
     <view wx:if="{{quote}}" class="quote-card">
       <text class="quote-mark">"</text>
       <text class="quote-text">{{quote.text}}</text>
       <text class="quote-author">— {{quote.author}}</text>
+      <view class="quote-foot">
+        <view class="quote-btn" bindtap="changeQuote"><text>⟳ 换一句</text></view>
+      </view>
     </view>
   </view>
 

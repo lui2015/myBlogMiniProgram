@@ -9,11 +9,14 @@ Page({
   data: {
     items: [],
     total: 0,
+    keyword: '',
     loading: true,
     error: ''
   },
 
-  onLoad() {
+  onLoad(options) {
+    this.keyword = (options && options.q) || ''
+    this.setData({ keyword: this.keyword })
     this.load()
   },
 
@@ -23,7 +26,9 @@ Page({
 
   load() {
     this.setData({ loading: true, error: '' })
-    return api.getList('myskills', { pageSize: 200 })
+    const params = { pageSize: 200 }
+    if (this.keyword) params.q = this.keyword
+    return api.getList('myskills', params)
       .then(res => {
         const items = res.items || []
         this.setData({

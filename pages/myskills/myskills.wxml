@@ -13,6 +13,8 @@
     <view class="sec-line"></view>
   </view>
 
+  <view wx:if="{{keyword}}" class="search-banner">搜索「{{keyword}}」· 共 {{total}} 项结果</view>
+
   <view wx:if="{{loading}}" class="state"><text class="state-text">正在加载…</text></view>
 
   <view wx:elif="{{error}}" class="state">
@@ -40,7 +42,7 @@
       </view>
       <view class="row-desc">{{item.description || '暂无介绍'}}</view>
     </view>
-    <view class="list-end">— 全部技能作品 —</view>
+    <view class="list-end">{{keyword ? '— 搜索结果结束 —' : '— 全部技能作品 —'}}</view>
     <view class="list-hint">点击条目可复制技能地址，小程序不跳转站外网页</view>
   </view>
 
