@@ -12,11 +12,6 @@ const CATEGORIES = [
     section: 'albums', path: '/pages/albums/albums', tab: false, tone: 'purple'
   },
   {
-    key: 'video', name: '视频', en: 'VIDEOS', icon: '🎬',
-    desc: '作品记录与视频分享', unit: '个',
-    section: 'videos', path: '/pages/videos/videos', tab: false, tone: 'pink'
-  },
-  {
     key: 'poem', name: '诗词', en: 'POEMS', icon: '✒️',
     desc: '偶尔写几行，记录心境与风景', unit: '首',
     section: 'poems', path: '/pages/poems/poems', tab: false, tone: 'cyan'

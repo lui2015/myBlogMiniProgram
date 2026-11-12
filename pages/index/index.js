@@ -10,7 +10,6 @@ Page({
     hero: {},
     photos: [],
     poem: null,
-    videos: [],
     mySkills: [],
     mySkillsMore: false,
     mySkillsTotal: 0,
@@ -18,7 +17,7 @@ Page({
     softwares: [],
     showSoftware: config.showSoftwareOnHome,
     quote: null,
-    counts: { article: 0, album: 0, video: 0, poem: 0, quote: 0, software: 0 },
+    counts: { article: 0, album: 0, poem: 0, quote: 0, software: 0 },
     guides: categories.withCounts({}),
     loading: true
   },
@@ -40,7 +39,6 @@ Page({
       this.loadHero(),
       this.loadPhotos(),
       this.loadPoems(),
-      this.loadVideos(),
       this.loadMySkills(),
       this.loadWorks(),
       this.loadSoftwares(),
@@ -81,17 +79,6 @@ Page({
         this.randomPoem()
       })
       .catch(err => console.warn('[poems]', err))
-  },
-
-  loadVideos() {
-    return api.getList('videos')
-      .then(res => {
-        this.setData({
-          videos: resolveFields(res.items.slice(0, 4), ['cover', 'src']),
-          'counts.video': res.total
-        })
-      })
-      .catch(err => console.warn('[videos]', err))
   },
 
   loadMySkills() {
@@ -196,10 +183,6 @@ Page({
 
   goAllWorks() {
     wx.switchTab({ url: '/pages/works/works' })
-  },
-
-  goVideos() {
-    wx.navigateTo({ url: '/pages/videos/videos' })
   },
 
   goWorkDetail(e) {

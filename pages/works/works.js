@@ -43,13 +43,6 @@ function rowFor(key, item, index) {
       path: `/pages/softwares/softwares?id=${enc}`
     }
   }
-  if (key === 'video') {
-    return {
-      id, title: text(item.title) || '未命名视频',
-      subtitle: joinParts([item.category, item.duration, item.views ? `${item.views} 次观看` : '', item.date]),
-      path: ''
-    }
-  }
   if (key === 'poem') {
     return {
       id, title: text(item.title) || '无题',
@@ -190,7 +183,7 @@ Page({
     return this.fetchWorks()
   },
 
-  // 全站搜索：并发查 6 类作品，逐类独立失败不影响其它类
+  // 全站搜索：并发查 5 类作品，逐类独立失败不影响其它类
   searchAll() {
     const keyword = this.data.keyword.trim()
     if (!keyword) return this.clearSearch()

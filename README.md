@@ -27,8 +27,8 @@
 
 | 页面 | 路径 | 使用的接口模块 |
 |------|------|----------------|
-| 首页 | `pages/index/index` | `hero` `photos` `poems` `videos` `myskills` `works` `softwares` `quotes` `albums` |
-| 作品（分类导览 + 全站搜索 + 文章） | `pages/works/works` | 6 类作品（`q` 并发搜索）+ `/api/open` 索引 + `works`（分类筛选） |
+| 首页 | `pages/index/index` | `hero` `photos` `poems` `myskills` `works` `softwares` `quotes` `albums` |
+| 作品（分类导览 + 全站搜索 + 文章） | `pages/works/works` | 5 类作品（`q` 并发搜索）+ `/api/open` 索引 + `works`（分类筛选） |
 | 文章详情 | `pages/detail/detail` | `works/{id}`，Markdown 正文解析渲染 |
 | 软件作品 | `pages/softwares/softwares` | `softwares`（网格 + 详情弹层） |
 | 技能作品 | `pages/myskills/myskills` | `myskills`（全量列表 + 复制地址） |
@@ -38,7 +38,6 @@
 | 尺子 | `pages/ruler/ruler` | 无接口，校准值存本机 |
 | 相册列表 | `pages/albums/albums` | `albums` |
 | 相册详情 | `pages/album/album` | `albums/{id}` |
-| 视频 | `pages/videos/videos` | `videos` |
 | 诗词 | `pages/poems/poems` | `poems`（`q` 搜索） |
 | 我的思考 | `pages/quotes/quotes` | `quotes`（分页加载，共 146 条） |
 | 关于 | `pages/about/about` | `about`（单例对象）+ `hero`（头像兜底） |
@@ -49,11 +48,11 @@
 
 ## 分类导览
 
-6 个内容分类（文章 / 相册 / 视频 / 诗词 / 我的思考 / 软件）统一由 `utils/categories.js` 维护：名称、英文、图标、引导文案、单位、目标路径与对应 API 模块；数量取自 `GET /api/open` 索引里各模块的 `count`。
+5 个内容分类（文章 / 相册 / 诗词 / 我的思考 / 软件）统一由 `utils/categories.js` 维护：名称、英文、图标、引导文案、单位、目标路径与对应 API 模块；数量取自 `GET /api/open` 索引里各模块的 `count`。视频模块已按个人主体类目要求移除。
 
 - **首页**：`CATEGORY GUIDE` 横向滑动卡片作为快捷引导，右上角「全部作品」进入作品 Tab。
 - **作品 Tab**：2 列分类网格，点击非文章分类进入对应二级页；点击「文章」滚动到本页下方的文章列表（分类筛选保持不变）。
-- **全站搜索**：作品 Tab 的搜索框并发查询 `works / albums / videos / poems / quotes / softwares` 六个模块的 `q` 参数，结果按类型分组（每组最多 5 条，显示总条数）。文章 / 相册 / 软件进详情页，诗词 / 视频 / 思考进对应列表页并带上同一关键词；「查看全部」同理，文章组则清空搜索回到本页列表。清空关键词恢复文章列表。搜索期间有防抖、过期结果丢弃，单个模块失败不影响其它类型。
+- **全站搜索**：作品 Tab 的搜索框并发查询 `works / albums / poems / quotes / softwares` 五个模块的 `q` 参数，结果按类型分组（每组最多 5 条，显示总条数）。文章 / 相册 / 软件进详情页，诗词 / 思考进对应列表页并带上同一关键词；「查看全部」同理，文章组则清空搜索回到本页列表。清空关键词恢复文章列表。搜索期间有防抖、过期结果丢弃，单个模块失败不影响其它类型。
 
 ## 首页文章作品（LATEST WORKS）
 
@@ -109,10 +108,10 @@
 - 正文由结构化 blocks 交给原生组件渲染，不拼接 HTML 字符串；外部颜色值经格式校验后才用于样式。
 - 社交地址、作品地址仅做中性的「复制」交互，不引导跳转浏览器或第三方平台；「关于我」的社交链接来自 `about.socialLinks`，复制前会去掉 `mailto:` 前缀并过滤危险协议。
 - 倒计时事件、尺子校准值仅存本机、不上传，不构成用户发布内容；尺子不联网、不申请定位或相机等权限；「关于我」不含软件下载与二维码引流。金融投资类内容仅集中在首页 SOFTWARE 模块，可通过 `utils/config.js` 一键隐藏。
+- **不含视频服务**：首页视频区块、视频列表页、`<video>` 播放组件及 `videos` 接口调用已全部移除，分类导览与全站搜索也不再包含视频类型，避免个人主体小程序涉及未开放的视频服务类目。
 
 ## 已知数据情况
 
-- `videos` 的 `src` 字段目前均为空字符串，视频页会降级为预览封面并提示；站点补齐播放地址后，小程序会自动启用内置播放器。
 - 部分图片字段是站内相对路径（`/uploads/...`、`/images/...`，如 `about.avatar`），`utils/util.js` 会自动补全为完整 HTTPS 地址。
 - `about.avatar` / `hero.avatarUrl` 等图片若加载失败，会回退显示 `avatarText` 文字头像；`GET /api/open/about` 失败时「关于我」显示上次成功同步的内容（或错误重试页），不会回退到写死的旧数据。其它页面在 `onLoad` 拉取数据，后台修改后下拉刷新即可同步。
 

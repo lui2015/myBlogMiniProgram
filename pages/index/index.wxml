@@ -166,28 +166,6 @@
     </view>
   </view>
 
-  <!-- ====== 视频 VIDEO STREAM ====== -->
-  <view class="cy-section">
-    <view class="sec-header">
-      <text class="sec-icon">◈</text>
-      <text class="sec-title">VIDEO STREAM</text>
-      <view class="sec-line"></view>
-    </view>
-    <view wx:if="{{videos.length}}" class="video-grid">
-      <view class="video-card" wx:for="{{videos}}" wx:key="id" bindtap="goVideos">
-        <image class="video-cover" src="{{item.cover}}" mode="aspectFill" lazy-load></image>
-        <view class="video-mask"></view>
-        <view class="video-play">▶</view>
-        <text class="video-duration">{{item.duration}}</text>
-        <view class="video-caption">
-          <text class="video-title">{{item.title}}</text>
-          <text class="video-meta">{{item.category}} · {{item.views}} 次观看</text>
-        </view>
-      </view>
-    </view>
-    <view wx:elif="{{!loading}}" class="state"><text class="state-text">暂无视频数据</text></view>
-  </view>
-
   <!-- ====== 技能作品 SKILLS ====== -->
   <view wx:if="{{mySkills.length}}" class="cy-section">
     <view class="sec-header">
