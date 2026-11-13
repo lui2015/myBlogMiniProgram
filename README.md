@@ -27,7 +27,7 @@
 
 | 页面 | 路径 | 使用的接口模块 |
 |------|------|----------------|
-| 首页 | `pages/index/index` | `hero` `photos` `poems` `myskills` `works` `softwares` `quotes` `albums` |
+| 首页 | `pages/index/index` | `hero` `albums`（相框照片 + 分类数量）`photos`（仅兜底）`poems` `myskills` `works` `softwares` `quotes` |
 | 作品（分类导览 + 全站搜索 + 文章） | `pages/works/works` | 6 类作品（`q` 并发搜索）+ `/api/open` 索引 + `works`（分类筛选） |
 | 文章详情 | `pages/detail/detail` | `works/{id}`，Markdown 正文解析渲染 |
 | 软件作品 | `pages/softwares/softwares` | `softwares`（网格 + 详情弹层） |
@@ -67,6 +67,10 @@
 
 - 照片、文章、诗词、思考四个区块标题栏右侧的「查看更多 →」复用 `utils/categories.js` 的路径：照片 → `pages/albums/albums`（相册列表），文章 → `pages/works/works`（作品 Tab，用 `switchTab`），诗词 → `pages/poems/poems`，思考 → `pages/quotes/quotes`。
 - 诗词卡片「⟳ 换一首」与思考卡片「⟳ 换一句」在本页已加载的列表里随机切换，并避免连续显示同一条；数据来自 `poems` / `quotes` 接口，下拉刷新可重新拉取。
+
+## 首页照片相框（PHOTO FRAME）
+
+与「查看更多 →」进入的相册页同源，数据来自 `GET /api/open/albums`：摊平各相册的 `photos`（相册内无照片时用 `cover`），最多取 9 张；`src` 为站内相对路径时由 `utils/util.js` 补全，标题取照片标题、缺省回退相册名。后台在「摄影相册」里增删照片后，首页**切回本 Tab 或下拉刷新**即同步，无需再单独维护「首页照片」模块。`albums` 请求失败时才回退 `GET /api/open/photos`（站点当前的 `picsum` 示例图）。点击相框用 `wx.previewImage` 预览当前批次全部图片。
 
 ## 首页文章作品（LATEST WORKS）
 
@@ -127,7 +131,7 @@
 ## 已知数据情况
 
 - 部分图片字段是站内相对路径（`/uploads/...`、`/images/...`，如 `about.avatar`），`utils/util.js` 会自动补全为完整 HTTPS 地址。
-- `about.avatar` / `hero.avatarUrl` 等图片若加载失败，会回退显示 `avatarText` 文字头像；`GET /api/open/about` 失败时「关于我」显示上次成功同步的内容（或错误重试页），不会回退到写死的旧数据。其它页面在 `onLoad` 拉取数据，后台修改后下拉刷新即可同步。
+- `about.avatar` / `hero.avatarUrl` 等图片若加载失败，会回退显示 `avatarText` 文字头像；`GET /api/open/about` 失败时「关于我」显示上次成功同步的内容（或错误重试页），不会回退到写死的旧数据。其它页面在 `onLoad` 拉取数据，后台修改后下拉刷新即可同步；首页相框还会在 `onShow`（Tab 切回）静默重新拉取。
 
 ## 使用
 

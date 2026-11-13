@@ -4,6 +4,7 @@ const config = require('../../utils/config')
 const categories = require('../../utils/categories')
 
 const SKILL_PREVIEW = 5
+const PHOTO_LIMIT = 9
 
 Page({
   data: {
@@ -19,12 +20,23 @@ Page({
     quote: null,
     counts: { article: 0, album: 0, poem: 0, quote: 0, software: 0 },
     guides: categories.withCounts({}),
-    loading: true
+    loading: true,
+    loadError: ''
   },
 
   onLoad() {
     this.poems = []
     this.quotes = []
+    this.loadAll()
+  },
+
+  onShow() {
+    // 切回首页时静默刷新相框，后台更新相册后无需重新编译
+    if (this.hasShown) this.loadAlbums()
+    this.hasShown = true
+  },
+
+  onRetry() {
     this.loadAll()
   },
 
@@ -37,17 +49,28 @@ Page({
     this.setData({ loading: true })
     const tasks = [
       this.loadHero(),
-      this.loadPhotos(),
+      this.loadAlbums(),
       this.loadPoems(),
       this.loadMySkills(),
       this.loadWorks(),
       this.loadSoftwares(),
-      this.loadQuotes(),
-      this.loadAlbumCount()
+      this.loadQuotes()
     ]
-    return Promise.all(tasks).then(() => {
+    // 单个模块同步抛错 / Promise 异常都不能让首页卡在 loading 或整片空白
+    return Promise.all(tasks.map(task => Promise.resolve(task).catch(err => {
+      console.warn('[index] 模块加载异常', err)
+    }))).then(() => {
       this.refreshGuides()
-      this.setData({ loading: false })
+      const d = this.data
+      const empty = !d.photos.length && !d.works.length && !d.poem &&
+        !d.quote && !d.mySkills.length && !d.softwares.length
+      this.setData({
+        loading: false,
+        loadError: empty ? '暂时没有读取到数据，请检查网络或合法域名配置后重试' : ''
+      })
+    }).catch(err => {
+      console.warn('[index] 首页初始化失败', err)
+      this.setData({ loading: false, loadError: '页面初始化失败，点击重试' })
     })
   },
 
@@ -65,10 +88,43 @@ Page({
       .catch(err => console.warn('[hero]', err))
   },
 
-  loadPhotos() {
-    return api.getList('photos')
-      .then(res => this.setData({ photos: resolveFields(res.items, ['src']) }))
-      .catch(err => console.warn('[photos]', err))
+  // 首页相框与「查看更多」进入的相册页同源：展示各相册里上传的真实照片。
+  // 后台增删相册照片后首页自动跟随，相册接口异常时才回退「首页照片」模块。
+  loadAlbums() {
+    return api.getList('albums')
+      .then(res => {
+        const albums = res.items || []
+        const photos = []
+        albums.forEach(album => {
+          const list = Array.isArray(album.photos) ? album.photos : []
+          list.forEach((photo, i) => {
+            photos.push({
+              id: String((photo && photo.id) || `${album.id}_${i}`),
+              src: (photo && photo.src) || album.cover || '',
+              title: String((photo && photo.title) || album.name || '').trim(),
+              desc: ''
+            })
+          })
+          if (!list.length && album.cover) {
+            photos.push({
+              id: String(album.id),
+              src: album.cover,
+              title: String(album.name || '').trim(),
+              desc: ''
+            })
+          }
+        })
+        this.setData({
+          'counts.album': Number(res.total) || albums.length,
+          photos: resolveFields(photos.slice(0, PHOTO_LIMIT), ['src']).filter(item => item.src)
+        })
+      })
+      .catch(err => {
+        console.warn('[albums]', err)
+        return api.getList('photos')
+          .then(res => this.setData({ photos: resolveFields(res.items, ['src']) }))
+          .catch(err2 => console.warn('[photos]', err2))
+      })
   },
 
   loadPoems() {
@@ -140,12 +196,6 @@ Page({
         this.randomQuote()
       })
       .catch(err => console.warn('[quotes]', err))
-  },
-
-  loadAlbumCount() {
-    return api.getPage('albums', 1, 1)
-      .then(res => this.setData({ 'counts.album': res.total }))
-      .catch(err => console.warn('[albums]', err))
   },
 
   randomPoem() {

@@ -19,6 +19,11 @@
     <view class="hero-deco"><view class="deco-line"></view><view class="deco-dot"></view></view>
   </view>
 
+  <view wx:if="{{loadError}}" class="home-error" bindtap="onRetry">
+    <text class="home-error-text">{{loadError}}</text>
+    <text class="home-error-action">↻ 重新加载</text>
+  </view>
+
   <!-- ====== 分类导览 CATEGORY GUIDE ====== -->
   <view class="cy-section guide-section">
     <view class="guide-head">
