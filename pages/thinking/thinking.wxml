@@ -1,0 +1,147 @@
+<view class="page">
+
+  <view class="hero">
+    <view class="hero-grid"></view>
+    <text class="hero-title">MENTAL MODELS</text>
+    <text class="hero-sub">// 思维模型库</text>
+    <text class="hero-stats">{{statsLine || '整合人类最优秀的思维框架'}}</text>
+    <view class="hero-line"></view>
+  </view>
+
+  <view wx:if="{{loading}}" class="state">
+    <text class="state-text">正在同步思维模型库…</text>
+  </view>
+
+  <view wx:elif="{{errorMsg}}" class="state">
+    <text class="state-text">{{errorMsg}}</text>
+    <view class="state-retry" bindtap="retry">重新加载</view>
+  </view>
+
+  <block wx:else>
+
+    <view class="section-head">
+      <text class="sec-icon">◈</text>
+      <text class="sec-title">DAILY MODEL</text>
+      <view class="sec-line"></view>
+    </view>
+
+    <view wx:if="{{daily}}" class="daily-card" bindtap="openDaily">
+      <view class="daily-card-grid"></view>
+      <view class="daily-top">
+        <text class="daily-label">✨ 每日一模型 · {{today}}</text>
+        <text class="daily-shuffle" catchtap="shuffleDaily">⟳ 换一个</text>
+      </view>
+      <view class="daily-main">
+        <text class="daily-icon">{{daily.icon}}</text>
+        <view class="daily-body">
+          <view class="daily-name-row">
+            <text class="daily-name">{{daily.title}}</text>
+            <text class="daily-stars">{{daily.stars}}</text>
+          </view>
+          <text class="daily-cat">{{daily.categoryName}} · {{daily.subtitle}}</text>
+        </view>
+      </view>
+      <text wx:if="{{daily.quote}}" class="daily-quote">“{{daily.quote}}”</text>
+      <view class="daily-more">
+        <text>深入学习</text>
+        <text class="daily-arrow">→</text>
+      </view>
+      <view class="daily-corner tl"></view>
+      <view class="daily-corner br"></view>
+    </view>
+
+    <view class="search-bar">
+      <text class="search-icon">🔍</text>
+      <input
+        class="search-input"
+        type="text"
+        value="{{keyword}}"
+        placeholder="搜索名称 / 副标题 / 标签 / 洞察"
+        placeholder-class="search-ph"
+        confirm-type="search"
+        bindinput="onSearchInput"
+      />
+      <text wx:if="{{keyword}}" class="search-clear" catchtap="clearSearch">×</text>
+    </view>
+
+    <view class="section-head">
+      <text class="sec-icon">◈</text>
+      <text class="sec-title">CATEGORIES</text>
+      <view class="sec-line"></view>
+    </view>
+
+    <scroll-view class="tabs" scroll-x enable-flex>
+      <view
+        wx:for="{{tabs}}"
+        wx:key="id"
+        class="tab {{category === item.id ? 'active' : ''}}"
+        bindtap="onCategory"
+        data-id="{{item.id}}"
+      >
+        <text class="tab-icon">{{item.icon}}</text>
+        <text class="tab-name">{{item.name}}</text>
+        <text class="tab-count">{{item.count}}</text>
+      </view>
+    </scroll-view>
+
+    <view class="diff-row">
+      <view
+        wx:for="{{difficulties}}"
+        wx:key="value"
+        class="diff {{difficulty === item.value ? 'active' : ''}}"
+        bindtap="onDifficulty"
+        data-value="{{item.value}}"
+      >{{item.name}}</view>
+    </view>
+
+    <view class="section-head">
+      <text class="sec-icon">◈</text>
+      <text class="sec-title">MODEL LIST · {{total}}</text>
+      <view class="sec-line"></view>
+    </view>
+
+    <view wx:if="{{!list.length}}" class="state">
+      <text class="state-text">没有匹配的模型，换个关键词或分类试试。</text>
+    </view>
+
+    <view
+      class="model-card"
+      wx:for="{{list}}"
+      wx:key="slug"
+      bindtap="openModel"
+      data-slug="{{item.slug}}"
+    >
+      <view class="model-icon-wrap">
+        <text class="model-icon">{{item.icon}}</text>
+      </view>
+      <view class="model-body">
+        <view class="model-top">
+          <text class="model-name">{{item.title}}</text>
+          <text wx:if="{{item.fav}}" class="model-fav">★</text>
+        </view>
+        <text class="model-sub">{{item.subtitle}}</text>
+        <text wx:if="{{item.quote}}" class="model-quote">{{item.quote}}</text>
+        <view class="model-meta">
+          <text class="model-cat">{{item.categoryName}}</text>
+          <text class="model-stars">{{item.stars}}</text>
+        </view>
+        <view wx:if="{{item.tags.length}}" class="model-tags">
+          <text class="model-tag" wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this">#{{tag}}</text>
+        </view>
+      </view>
+      <text class="model-arrow">→</text>
+      <view class="model-corner tl"></view>
+      <view class="model-corner br"></view>
+    </view>
+
+    <view wx:if="{{hasMore}}" class="more-btn" bindtap="loadMore">加载更多 ↓</view>
+    <view wx:else class="list-end">— 已显示全部 {{total}} 个模型 —</view>
+
+    <view class="tip-card">
+      <text class="tip-title">◈ 数据来源</text>
+      <text class="tip-text">内容来自站点公开只读接口 /thinkingModel/api/v1，只在本机缓存，断网可看已缓存内容；下拉刷新可同步最新数据。收藏记录仅存本机，不会上传。</text>
+    </view>
+
+  </block>
+
+</view>

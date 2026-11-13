@@ -2,6 +2,7 @@ const workday = require('../../utils/workday')
 const holidayLoader = require('../../utils/holidayLoader')
 const localData = require('../../utils/holidays')
 const rulerStorage = require('../../utils/ruler')
+const thinkingApi = require('../../utils/thinkingApi')
 
 const STORAGE_KEY = 'countdown_events_v1'
 
@@ -43,21 +44,32 @@ Page({
         tag: '本机校准',
         preview: '',
         path: '/pages/ruler/ruler'
+      },
+      {
+        key: 'thinking',
+        icon: '🧠',
+        name: '思维模型',
+        desc: '191 个思维模型与完整解读，按 10 大分类浏览、搜索、收藏，每天认识一个模型。',
+        tag: '站点同步',
+        preview: '',
+        path: '/pages/thinking/thinking'
       }
     ]
   },
 
   onLoad() {
     this.refreshPreview()
+    this.refreshThinkingPreview()
     // 取到站点最新节假日数据后，用真实数据刷新预览
     holidayLoader.load().then(({ index }) => this.refreshPreview(index))
   },
 
   onShow() {
     this.refreshPreview(this.cachedIndex)
+    this.refreshThinkingPreview()
   },
 
-  // 预览完全由本机 JS 计算，不请求任何网页
+  // 前三个工具的预览完全由本机 JS 计算，不请求任何网页
   refreshPreview(index) {
     if (index) this.cachedIndex = index
     const holidayIndex = this.cachedIndex || workday.buildIndex(localData)
@@ -88,11 +100,39 @@ Page({
       ? `已校准 · 1 cm ≈ ${cal.value.toFixed(1)} px`
       : '未校准 · 进入后用屏幕宽度或银行卡对齐'
 
-    this.setData({
-      'tools[0].preview': weekText,
-      'tools[1].preview': countdownText,
-      'tools[2].preview': rulerText
-    })
+    const patch = {}
+    const put = (key, text) => {
+      const i = this.data.tools.findIndex(item => item.key === key)
+      if (i >= 0) patch[`tools[${i}].preview`] = text
+    }
+    put('workday', weekText)
+    put('countdown', countdownText)
+    put('ruler', rulerText)
+    this.setData(patch)
+  },
+
+  // 按 key 定位，避免以后插入新卡片时预览索引错位
+  setPreview(key, text) {
+    const index = this.data.tools.findIndex(item => item.key === key)
+    if (index >= 0) this.setData({ [`tools[${index}].preview`]: text })
+  },
+
+  // 思维模型预览：先读本机缓存立即显示，再静默同步站点最新列表
+  refreshThinkingPreview() {
+    const cached = thinkingApi.getOfflineModels()
+    const show = models => {
+      const daily = thinkingApi.dailyModel(models, new Date())
+      const text = daily
+        ? `今日模型 · ${daily.title} · 共 ${models.length} 个模型`
+        : '191 个模型 · 10 大分类 · 每日一模型'
+      this.setPreview('thinking', text)
+    }
+    if (cached.length) show(cached)
+    thinkingApi.getAllModels()
+      .then(models => { if (models && models.length) show(models) })
+      .catch(() => {
+        if (!cached.length) this.setPreview('thinking', '思维模型库 · 联网后可浏览全部模型')
+      })
   },
 
   goTool(e) {

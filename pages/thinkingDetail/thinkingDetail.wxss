@@ -1,0 +1,461 @@
+.page {
+  min-height: 100vh;
+  padding: 0 32rpx 80rpx;
+}
+
+/* ===== Hero ===== */
+.hero {
+  position: relative;
+  margin: 0 -32rpx;
+  padding: 48rpx 32rpx 40rpx;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 50% 0%, #141a33 0%, #0a0a14 78%);
+}
+
+.hero-grid {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image:
+    linear-gradient(rgba(0, 212, 255, 0.03) 1rpx, transparent 1rpx),
+    linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1rpx, transparent 1rpx);
+  background-size: 44rpx 44rpx;
+}
+
+.hero-eyebrow,
+.hero-main,
+.hero-meta,
+.hero-tags,
+.fav-btn {
+  position: relative;
+}
+
+.hero-eyebrow {
+  display: block;
+  font-size: 20rpx;
+  color: #00d4ff;
+  font-family: monospace;
+  letter-spacing: 2rpx;
+}
+
+.hero-main {
+  display: flex;
+  align-items: center;
+  margin-top: 26rpx;
+  padding-right: 130rpx;
+}
+
+.hero-icon {
+  width: 96rpx;
+  height: 96rpx;
+  line-height: 96rpx;
+  text-align: center;
+  font-size: 50rpx;
+  flex-shrink: 0;
+  margin-right: 22rpx;
+  background-color: rgba(0, 212, 255, 0.08);
+  border: 1rpx solid rgba(0, 212, 255, 0.28);
+  border-radius: 16rpx;
+}
+
+.hero-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.hero-title {
+  display: block;
+  font-size: 38rpx;
+  font-weight: 900;
+  color: #ffffff;
+  text-shadow: -2rpx 0 rgba(255, 45, 149, 0.7), 2rpx 0 rgba(0, 212, 255, 0.7);
+  line-height: 1.35;
+}
+
+.hero-sub {
+  display: block;
+  font-size: 22rpx;
+  color: #8a8a9a;
+  margin-top: 10rpx;
+  line-height: 1.6;
+}
+
+.hero-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 22rpx;
+}
+
+.hero-stars {
+  font-size: 19rpx;
+  margin-right: 16rpx;
+}
+
+.hero-featured {
+  font-size: 19rpx;
+  color: #a855f7;
+  background-color: rgba(168, 85, 247, 0.12);
+  padding: 4rpx 12rpx;
+  border-radius: 4rpx;
+  margin-right: 16rpx;
+}
+
+.hero-date {
+  font-size: 19rpx;
+  color: #5a5a6a;
+  font-family: monospace;
+}
+
+.hero-tags {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 18rpx;
+}
+
+.hero-tag {
+  font-size: 19rpx;
+  color: #7a7a96;
+  margin-right: 16rpx;
+}
+
+.fav-btn {
+  position: absolute;
+  top: 44rpx;
+  right: 32rpx;
+  padding: 10rpx 18rpx;
+  font-size: 20rpx;
+  color: #00d4ff;
+  background-color: rgba(0, 212, 255, 0.08);
+  border: 1rpx solid rgba(0, 212, 255, 0.35);
+  border-radius: 26rpx;
+}
+
+.fav-btn.on {
+  color: #ff2d95;
+  background-color: rgba(255, 45, 149, 0.1);
+  border-color: rgba(255, 45, 149, 0.4);
+}
+
+/* ===== 区块头 / 面板 ===== */
+.section-head {
+  display: flex;
+  align-items: center;
+  margin: 40rpx 0 20rpx;
+}
+
+.sec-icon {
+  font-size: 26rpx;
+  color: #00d4ff;
+  margin-right: 12rpx;
+}
+
+.sec-title {
+  font-size: 23rpx;
+  font-weight: bold;
+  color: rgba(255, 255, 255, 0.7);
+  letter-spacing: 3rpx;
+  font-family: monospace;
+}
+
+.sec-line {
+  flex: 1;
+  height: 1rpx;
+  margin-left: 20rpx;
+  background: linear-gradient(90deg, rgba(0, 212, 255, 0.3), transparent);
+}
+
+.panel {
+  padding: 24rpx;
+  background-color: rgba(255, 255, 255, 0.025);
+  border: 1rpx solid rgba(255, 255, 255, 0.06);
+  border-radius: 14rpx;
+}
+
+.body-text {
+  display: block;
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.82);
+  line-height: 1.9;
+}
+
+/* ===== 开场 ===== */
+.hook-card {
+  position: relative;
+  margin-top: 32rpx;
+  padding: 26rpx;
+  background-color: rgba(168, 85, 247, 0.06);
+  border: 1rpx solid rgba(168, 85, 247, 0.22);
+  border-radius: 14rpx;
+}
+
+.hook-label {
+  display: block;
+  font-size: 20rpx;
+  color: #c9a2ff;
+  margin-bottom: 14rpx;
+}
+
+.hook-text {
+  display: block;
+  font-size: 25rpx;
+  color: #ffffff;
+  line-height: 1.8;
+}
+
+.story-text {
+  display: block;
+  font-size: 22rpx;
+  color: #a8a8bc;
+  line-height: 1.9;
+  margin-top: 16rpx;
+}
+
+.hook-corner {
+  position: absolute;
+  width: 18rpx;
+  height: 18rpx;
+  border-color: rgba(168, 85, 247, 0.7);
+  border-style: solid;
+}
+
+.hook-corner.tl { top: 8rpx; left: 8rpx; border-width: 2rpx 0 0 2rpx; }
+.hook-corner.br { bottom: 8rpx; right: 8rpx; border-width: 0 2rpx 2rpx 0; }
+
+/* ===== 核心洞察 / 记忆句 ===== */
+.insight-card {
+  margin-top: 28rpx;
+  padding: 26rpx;
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(255, 255, 255, 0.015));
+  border: 1rpx solid rgba(0, 212, 255, 0.28);
+  border-left: 4rpx solid #00d4ff;
+  border-radius: 0 14rpx 14rpx 0;
+}
+
+.insight-label {
+  display: block;
+  font-size: 20rpx;
+  color: #00d4ff;
+  font-family: monospace;
+  letter-spacing: 1rpx;
+  margin-bottom: 14rpx;
+}
+
+.insight-text {
+  display: block;
+  font-size: 24rpx;
+  color: #ffffff;
+  line-height: 1.9;
+}
+
+.memory-card {
+  margin-top: 20rpx;
+  padding: 24rpx 26rpx;
+  background-color: rgba(168, 85, 247, 0.07);
+  border: 1rpx dashed rgba(168, 85, 247, 0.4);
+  border-radius: 14rpx;
+}
+
+.memory-label {
+  display: block;
+  font-size: 20rpx;
+  color: #a855f7;
+  margin-bottom: 12rpx;
+}
+
+.memory-text {
+  display: block;
+  font-size: 26rpx;
+  color: #ffffff;
+  line-height: 1.8;
+}
+
+/* ===== 用法 ===== */
+.usage-panel {
+  margin-bottom: 20rpx;
+}
+
+.usage-head {
+  display: flex;
+  align-items: center;
+  padding-bottom: 18rpx;
+  border-bottom: 1rpx solid rgba(255, 255, 255, 0.07);
+  margin-bottom: 10rpx;
+}
+
+.usage-icon {
+  font-size: 32rpx;
+  margin-right: 16rpx;
+}
+
+.usage-head-body {
+  flex: 1;
+}
+
+.usage-title {
+  display: block;
+  font-size: 25rpx;
+  font-weight: bold;
+  color: #ffffff;
+}
+
+.usage-sub {
+  display: block;
+  font-size: 19rpx;
+  color: #5a5a6a;
+  margin-top: 4rpx;
+}
+
+.usage-item {
+  display: flex;
+  align-items: flex-start;
+  padding: 10rpx 0;
+}
+
+.usage-no {
+  width: 40rpx;
+  flex-shrink: 0;
+  font-size: 22rpx;
+  color: #a855f7;
+  line-height: 1.8;
+}
+
+.usage-no.ordered {
+  color: #00d4ff;
+  font-family: monospace;
+}
+
+.usage-line {
+  flex: 1;
+  font-size: 23rpx;
+  color: rgba(255, 255, 255, 0.78);
+  line-height: 1.8;
+}
+
+/* ===== 案例 ===== */
+.case-card {
+  padding: 24rpx;
+  margin-bottom: 20rpx;
+  background-color: rgba(255, 255, 255, 0.025);
+  border: 1rpx solid rgba(255, 255, 255, 0.07);
+  border-left: 4rpx solid #00d4ff;
+  border-radius: 0 14rpx 14rpx 0;
+}
+
+.case-card.life {
+  border-left-color: #07c160;
+}
+
+.case-card.neg {
+  border-left-color: #ff2d95;
+}
+
+.case-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.case-title {
+  font-size: 25rpx;
+  font-weight: bold;
+  color: #ffffff;
+}
+
+.case-type {
+  font-size: 18rpx;
+  color: #8a8a9a;
+  padding: 4rpx 12rpx;
+  border: 1rpx solid rgba(255, 255, 255, 0.12);
+  border-radius: 4rpx;
+}
+
+.case-content {
+  display: block;
+  margin-top: 14rpx;
+  font-size: 23rpx;
+  color: rgba(255, 255, 255, 0.72);
+  line-height: 1.9;
+}
+
+/* ===== 延伸阅读 / 关联 ===== */
+.reading-row {
+  display: flex;
+  align-items: center;
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid rgba(255, 255, 255, 0.05);
+}
+
+.reading-row:last-child {
+  border-bottom: none;
+}
+
+.reading-dot {
+  font-size: 20rpx;
+  color: #00d4ff;
+  margin-right: 14rpx;
+}
+
+.reading-text {
+  flex: 1;
+  font-size: 22rpx;
+  color: rgba(255, 255, 255, 0.78);
+  line-height: 1.7;
+}
+
+.reading-copy {
+  font-size: 19rpx;
+  color: #7a7a96;
+  margin-left: 16rpx;
+}
+
+.related-row {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.related-chip {
+  display: flex;
+  align-items: center;
+  padding: 14rpx 20rpx;
+  margin: 0 16rpx 16rpx 0;
+  font-size: 22rpx;
+  color: #00d4ff;
+  background-color: rgba(0, 212, 255, 0.07);
+  border: 1rpx solid rgba(0, 212, 255, 0.28);
+  border-radius: 10rpx;
+}
+
+.related-chip:active {
+  background-color: rgba(0, 212, 255, 0.16);
+}
+
+.related-arrow {
+  margin-left: 10rpx;
+}
+
+/* ===== 底部 ===== */
+.bottom-bar {
+  margin-top: 44rpx;
+}
+
+.back-btn {
+  padding: 24rpx;
+  text-align: center;
+  font-size: 24rpx;
+  color: #00d4ff;
+  background-color: rgba(0, 212, 255, 0.06);
+  border: 1rpx solid rgba(0, 212, 255, 0.3);
+  border-radius: 12rpx;
+}
+
+.back-btn:active {
+  background-color: rgba(0, 212, 255, 0.14);
+}
+
+.source-note {
+  margin-top: 28rpx;
+  font-size: 20rpx;
+  color: #5a5a6a;
+  line-height: 1.8;
+  text-align: center;
+}

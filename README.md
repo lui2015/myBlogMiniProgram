@@ -4,6 +4,7 @@
 
 - 站点：https://www.luliming.xyz
 - 接口文档：https://github.com/lui2015/PersonalBlog/blob/main/docs/OPEN_API.md
+- 思维模型接口文档：https://www.luliming.xyz/thinkingModel/platform/docs
 - 数据实时读取，站点后台更新内容后小程序刷新即可生效
 
 ## 必做配置：服务器域名
@@ -17,7 +18,7 @@
 
 说明：
 
-- `request` 用于调用所有 `/api/open/...` 接口，以及站点节假日数据 `/workday/holidays.json`。
+- `request` 用于调用所有 `/api/open/...` 接口、站点节假日数据 `/workday/holidays.json`，以及思维模型只读接口 `/thinkingModel/api/v1/...`。
 - `downloadFile` 用于 `wx.previewImage` 预览照片、文章封面、相册图片、软件作品封面、自媒体二维码、技能证书。
 - 站点图片里还有 `picsum.photos`（示例占位图），如后续换成其他图床，需同步加入白名单。
 - 域名必须 HTTPS、已备案、不带端口和路径。
@@ -36,6 +37,8 @@
 | 工作日计算器 | `pages/workday/workday` | `/workday/holidays.json` + 内置兜底数据 |
 | 大事件倒计时 | `pages/countdown/countdown` | 本地存储 + 工作日计算 |
 | 尺子 | `pages/ruler/ruler` | 无接口，校准值存本机 |
+| 思维模型库 | `pages/thinking/thinking` | `/thinkingModel/api/v1/models`（分页拉全量）`/categories` `/stats`，搜索用 `q` |
+| 思维模型详情 | `pages/thinkingDetail/thinkingDetail` | `/thinkingModel/api/v1/models/{slug}` |
 | 相册列表 | `pages/albums/albums` | `albums` |
 | 相册详情 | `pages/album/album` | `albums/{id}` |
 | 诗词 | `pages/poems/poems` | `poems`（`q` 搜索） |
@@ -95,8 +98,9 @@
 - **工作日计算器**：对齐网页版 `/workday/` 的核心能力——日期区间工作日统计、快捷区间（今天/本周/本月/本季度/今年）、N 个工作日推算（支持负数与常用值）、日历可视化、年度节假日一览（点击可回填计算器）。自动识别法定节假日与调休补班。
 - **大事件倒计时**：对齐网页版 `/dajishi/` 的添加表单——事件名称、目标日期、自然日/工作日两种计算方式、12 个图标、卡片主题，支持删除确认。数据仅保存在本机 `wx.setStorageSync`，不做云端同步、无登录。
 - **尺子**：屏幕刻度尺，支持厘米 / 英寸（1 mm 或 1/16 in 小格）、横向 / 竖向，主刻度带 `0 / 1 / 2…` 数字标注，拖动 A / B 双游标读出间距并可复制结果。点「全屏」会隐藏所有面板让尺子铺满视口，顶部保留结果、底部保留单位 / 方向 / 重置 / 复制；页面配置了 `pageOrientation: auto`，手机横放时会自动重新测量刻度。手机系统不提供屏幕 PPI，因此提供三种校准方式：实体尺量屏幕宽度自动换算、滑块微调（含 ±0.1 / ±1 步进）、银行卡 / 1 元硬币 / A4 纸参考线对齐；校准值由 `utils/ruler.js` 存本机。精度取决于校准结果，仅供日常估测。
+- **思维模型**：对齐网页版 `/thinkingModel/` 的模型库——191 个模型 / 10 大分类 / 难度星级，每日一模型（按日期稳定选取，可「换一个」）、关键词搜索、分类与难度筛选、分页加载、我的收藏。数据走站点公开只读接口 `/thinkingModel/api/v1/`：列表按 `limit=100` 分页拉全量并缓存 24 小时，搜索用服务端 `q`（可匹配介绍等精简列表没有的字段），失败时退回本机缓存过滤；详情页读 `/models/{slug}`，渲染通俗介绍、核心洞察、记忆口诀、适用场景 / 步骤 / 误区 / 搭配、实战案例、延伸阅读与关联模型，可收藏、复制书名、跳转关联模型、分享直达详情。封装在 `utils/thinkingApi.js`，收藏仅存本机。
 
-工具集合页会显示本机实时计算出的预览（如「本周 5 个工作日」、尺子是否已校准）。节假日数据优先从站点 `holidays.json`（2024–2028）拉取，失败时回退到 `utils/holidays.js` 内置数据，断网也能用。尺子不联网、不申请任何权限。
+工具集合页会显示本机实时计算出的预览（如「本周 5 个工作日」、尺子是否已校准、今日模型）。节假日数据优先从站点 `holidays.json`（2024–2028）拉取，失败时回退到 `utils/holidays.js` 内置数据，断网也能用。思维模型数据优先读站点公开只读接口，只在本机缓存，断网可看已缓存内容，下拉刷新可强制同步。尺子不联网、不申请任何权限。
 
 ## 目录结构
 
@@ -115,17 +119,18 @@
 │   ├── ruler.js                      # 尺子校准值本地存储
 │   ├── workday.js                    # 日期 / 工作日计算纯函数
 │   ├── holidays.js                   # 节假日内置兜底数据
-│   └── holidayLoader.js              # 节假日数据加载与兜底
-└── pages/                            # 14 个页面
+│   ├── holidayLoader.js              # 节假日数据加载与兜底
+│   └── thinkingApi.js                # 思维模型 v1 只读接口 + 缓存 / 收藏
+└── pages/                            # 16 个页面
 ```
 
 ## 安全说明
 
-- **只读展示**：只调用 `GET` 接口，不含任何 `POST/PUT/DELETE`；小程序端不写入站点数据。
+- **只读展示**：只调用 `GET` 接口，不含任何 `POST/PUT/DELETE`；小程序端不写入站点数据。思维模型接口为公开只读、免鉴权，不含任何 API Key。
 - **不含凭据**：项目里没有管理员账号密码、AppSecret 等敏感信息。
 - 正文由结构化 blocks 交给原生组件渲染，不拼接 HTML 字符串；外部颜色值经格式校验后才用于样式。
-- 作品地址、站点地址仅做中性的「复制」交互，不引导跳转浏览器或第三方平台；VISIT BLOG 的站点地址只允许 http/https。底部 SOCIAL MEDIA 的二维码来自 `socialMedia` 模块，仅用 `wx.previewImage` 预览站内图片，不跳转第三方平台；颜色值经 `#rrggbb` 白名单校验，二维码地址由 `resolveUrl` 过滤危险协议。
-- 倒计时事件、尺子校准值仅存本机、不上传，不构成用户发布内容；尺子不联网、不申请定位或相机等权限；「关于我」不含软件下载。金融投资类内容仅集中在首页 SOFTWARE 模块，可通过 `utils/config.js` 一键隐藏。
+- 作品地址、站点地址仅做中性的「复制」交互，不引导跳转浏览器或第三方平台；VISIT BLOG 的站点地址只允许 http/https。底部 SOCIAL MEDIA 的二维码来自 `socialMedia` 模块，仅用 `wx.previewImage` 预览站内图片，不跳转第三方平台；颜色值经 `#rrggbb` 白名单校验，二维码地址由 `resolveUrl` 过滤危险协议。思维模型详情里的延伸阅读同样只做「复制」，不展示、不跳转外链。
+- 倒计时事件、尺子校准值、思维模型收藏与缓存仅存本机、不上传，不构成用户发布内容；尺子不联网、不申请定位或相机等权限；「关于我」不含软件下载。金融投资类内容仅集中在首页 SOFTWARE 模块，可通过 `utils/config.js` 一键隐藏。
 - **不含视频服务**：首页视频区块、视频列表页、`<video>` 播放组件及 `videos` 接口调用已全部移除，分类导览与全站搜索也不再包含视频类型；SOCIAL MEDIA 仅展示平台二维码，不提供任何视频播放能力，避免个人主体小程序涉及未开放的视频服务类目。
 
 ## 已知数据情况

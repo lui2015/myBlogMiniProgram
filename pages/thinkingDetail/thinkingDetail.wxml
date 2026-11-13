@@ -1,0 +1,137 @@
+<view class="page">
+
+  <view wx:if="{{loading}}" class="state">
+    <text class="state-text">正在读取模型解读…</text>
+  </view>
+
+  <view wx:elif="{{errorMsg}}" class="state">
+    <text class="state-text">{{errorMsg}}</text>
+    <view class="state-retry" bindtap="retry">重新加载</view>
+  </view>
+
+  <block wx:else>
+
+    <view class="hero">
+      <view class="hero-grid"></view>
+      <text class="hero-eyebrow">MENTAL MODEL · {{model.categoryName}}</text>
+      <view class="hero-main">
+        <text class="hero-icon">{{model.icon}}</text>
+        <view class="hero-body">
+          <text class="hero-title">{{model.title}}</text>
+          <text class="hero-sub">{{model.subtitle}}</text>
+        </view>
+      </view>
+      <view class="hero-meta">
+        <text class="hero-stars">{{model.stars}}</text>
+        <text wx:if="{{model.featured}}" class="hero-featured">精选</text>
+        <text wx:if="{{model.updatedAt}}" class="hero-date">更新 {{model.updatedAt}}</text>
+      </view>
+      <view wx:if="{{model.tags.length}}" class="hero-tags">
+        <text class="hero-tag" wx:for="{{model.tags}}" wx:for-item="tag" wx:key="*this">#{{tag}}</text>
+      </view>
+      <view class="fav-btn {{isFav ? 'on' : ''}}" catchtap="toggleFav">{{isFav ? '★ 已收藏' : '☆ 收藏'}}</view>
+    </view>
+
+    <view wx:if="{{model.hook || model.story}}" class="hook-card">
+      <text class="hook-label">🎬 开场</text>
+      <text wx:if="{{model.hook}}" class="hook-text">{{model.hook}}</text>
+      <text wx:if="{{model.story}}" class="story-text">{{model.story}}</text>
+      <view class="hook-corner tl"></view>
+      <view class="hook-corner br"></view>
+    </view>
+
+    <view wx:if="{{model.introduction}}" class="content-block">
+      <view class="section-head">
+        <text class="sec-icon">◈</text>
+        <text class="sec-title">INTRODUCTION</text>
+        <view class="sec-line"></view>
+      </view>
+      <view class="panel">
+        <text class="body-text">{{model.introduction}}</text>
+      </view>
+    </view>
+
+    <view wx:if="{{model.keyInsight}}" class="insight-card">
+      <text class="insight-label">KEY INSIGHT · 核心洞察</text>
+      <text class="insight-text">{{model.keyInsight}}</text>
+    </view>
+
+    <view wx:if="{{model.memorySentence}}" class="memory-card">
+      <text class="memory-label">💡 一句话记住</text>
+      <text class="memory-text">“{{model.memorySentence}}”</text>
+    </view>
+
+    <view wx:if="{{model.sections.length}}" class="content-block">
+      <view class="section-head">
+        <text class="sec-icon">◈</text>
+        <text class="sec-title">HOW TO USE</text>
+        <view class="sec-line"></view>
+      </view>
+      <view class="panel usage-panel" wx:for="{{model.sections}}" wx:for-item="section" wx:key="title">
+        <view class="usage-head">
+          <text class="usage-icon">{{section.icon}}</text>
+          <view class="usage-head-body">
+            <text class="usage-title">{{section.title}}</text>
+            <text class="usage-sub">{{section.sub}}</text>
+          </view>
+        </view>
+        <view class="usage-item" wx:for="{{section.items}}" wx:for-item="line" wx:key="no">
+          <text class="usage-no {{section.ordered ? 'ordered' : ''}}">{{section.ordered ? line.no : '·'}}</text>
+          <text class="usage-line">{{line.text}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{model.cases.length}}" class="content-block">
+      <view class="section-head">
+        <text class="sec-icon">◈</text>
+        <text class="sec-title">CASES · 案例</text>
+        <view class="sec-line"></view>
+      </view>
+      <view class="case-card {{item.cls}}" wx:for="{{model.cases}}" wx:key="title">
+        <view class="case-head">
+          <text class="case-title">{{item.title}}</text>
+          <text class="case-type">{{item.typeName}}</text>
+        </view>
+        <text class="case-content">{{item.content}}</text>
+      </view>
+    </view>
+
+    <view wx:if="{{model.reading.length}}" class="content-block">
+      <view class="section-head">
+        <text class="sec-icon">◈</text>
+        <text class="sec-title">FURTHER READING</text>
+        <view class="sec-line"></view>
+      </view>
+      <view class="panel">
+        <view class="reading-row" wx:for="{{model.reading}}" wx:for-item="text" wx:key="*this" bindtap="copyText" data-text="{{text}}">
+          <text class="reading-dot">▸</text>
+          <text class="reading-text">{{text}}</text>
+          <text class="reading-copy">复制</text>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{model.related.length}}" class="content-block">
+      <view class="section-head">
+        <text class="sec-icon">◈</text>
+        <text class="sec-title">RELATED MODELS</text>
+        <view class="sec-line"></view>
+      </view>
+      <view class="related-row">
+        <view class="related-chip" wx:for="{{model.related}}" wx:key="slug" bindtap="openRelated" data-slug="{{item.slug}}">
+          <text>{{item.title}}</text>
+          <text class="related-arrow">→</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="bottom-bar">
+      <view class="back-btn" bindtap="backToList">← 返回模型库</view>
+    </view>
+
+    <view class="source-note">内容来自站点公开只读接口，仅在本机缓存；断网可看已读过的模型，下拉刷新可同步最新解读。收藏仅存本机，不会上传。</view>
+
+  </block>
+
+</view>

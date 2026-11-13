@@ -7,6 +7,8 @@
     "pages/workday/workday",
     "pages/countdown/countdown",
     "pages/ruler/ruler",
+    "pages/thinking/thinking",
+    "pages/thinkingDetail/thinkingDetail",
     "pages/softwares/softwares",
     "pages/myskills/myskills",
     "pages/albums/albums",
