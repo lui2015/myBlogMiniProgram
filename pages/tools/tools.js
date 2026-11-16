@@ -3,6 +3,8 @@ const holidayLoader = require('../../utils/holidayLoader')
 const localData = require('../../utils/holidays')
 const rulerStorage = require('../../utils/ruler')
 const thinkingApi = require('../../utils/thinkingApi')
+const finance = require('../../utils/xiaobaiApi')
+const config = require('../../utils/config')
 
 const STORAGE_KEY = 'countdown_events_v1'
 
@@ -53,13 +55,26 @@ Page({
         tag: '站点同步',
         preview: '',
         path: '/pages/thinking/thinking'
+      },
+      {
+        key: 'xiaobai',
+        icon: '📈',
+        name: '小白财经',
+        desc: '132 篇财经知识漫画，按分类浏览、搜索与收藏，5 章讲透一个概念，正文原生排版阅读。',
+        tag: '站点同步',
+        preview: '',
+        path: '/pages/xiaobai/xiaobai'
       }
     ]
   },
 
   onLoad() {
+    if (!config.showXiaoBaiTool) {
+      this.setData({ tools: this.data.tools.filter(item => item.key !== 'xiaobai') })
+    }
     this.refreshPreview()
     this.refreshThinkingPreview()
+    this.refreshFinancePreview()
     // 取到站点最新节假日数据后，用真实数据刷新预览
     holidayLoader.load().then(({ index }) => this.refreshPreview(index))
   },
@@ -67,6 +82,7 @@ Page({
   onShow() {
     this.refreshPreview(this.cachedIndex)
     this.refreshThinkingPreview()
+    this.refreshFinancePreview()
   },
 
   // 前三个工具的预览完全由本机 JS 计算，不请求任何网页
@@ -132,6 +148,26 @@ Page({
       .then(models => { if (models && models.length) show(models) })
       .catch(() => {
         if (!cached.length) this.setPreview('thinking', '思维模型库 · 联网后可浏览全部模型')
+      })
+  },
+
+  // 小白财经预览：缓存立即显示，再静默同步站点最新文章
+  refreshFinancePreview() {
+    if (!config.showXiaoBaiTool) return
+    const cached = finance.getOfflineArticles()
+    const show = articles => {
+      const sorted = articles.slice().sort((a, b) => String(b.publishAt).localeCompare(String(a.publishAt)))
+      const latest = sorted[0]
+      if (!latest) return
+      const title = latest.title.replace(/^小白学财经[：:]\s*/, '')
+      const short = title.length > 14 ? `${title.slice(0, 14)}…` : title
+      this.setPreview('xiaobai', `共 ${articles.length} 篇 · 最新《${short}》`)
+    }
+    if (cached.length) show(cached)
+    finance.getAllArticles()
+      .then(articles => { if (articles && articles.length) show(articles) })
+      .catch(() => {
+        if (!cached.length) this.setPreview('xiaobai', '小白财经 · 联网后可浏览全部文章')
       })
   },
 

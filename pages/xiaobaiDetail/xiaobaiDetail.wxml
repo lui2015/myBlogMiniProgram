@@ -1,0 +1,141 @@
+<view class="page">
+
+  <view wx:if="{{loading}}" class="state">
+    <text class="state-text">正在整理这篇财经漫画…</text>
+  </view>
+
+  <view wx:elif="{{errorMsg}}" class="state">
+    <text class="state-text">{{errorMsg}}</text>
+    <view class="state-retry" bindtap="retry">重新加载</view>
+  </view>
+
+  <block wx:else>
+
+    <view class="hero">
+      <view class="hero-grid"></view>
+      <text class="hero-eyebrow">XIAOBAI FINANCE · {{view.article.categoryName}}</text>
+      <text class="hero-title">{{view.article.title}}</text>
+      <text wx:if="{{view.article.summary}}" class="hero-summary">{{view.article.summary}}</text>
+      <view class="hero-meta">
+        <text class="hero-meta-item">{{view.article.dateText}}</text>
+        <text class="hero-meta-item">👀 {{view.article.viewCount}}</text>
+        <text wx:if="{{view.article.subCategoryName}}" class="hero-meta-item">{{view.article.subCategoryName}}</text>
+      </view>
+      <view wx:if="{{view.tags.length}}" class="hero-tags">
+        <text class="hero-tag" wx:for="{{view.tags}}" wx:for-item="tag" wx:key="*this">#{{tag}}</text>
+      </view>
+      <view class="fav-btn {{isFav ? 'on' : ''}}" catchtap="toggleFav">{{isFav ? '★ 已收藏' : '☆ 收藏'}}</view>
+    </view>
+
+    <view class="disclaimer">{{view.disclaimer}}</view>
+
+    <view wx:if="{{view.toc.length}}" class="toc-card">
+      <text class="toc-title">◈ 本篇目录</text>
+      <view class="toc-row" wx:for="{{view.toc}}" wx:for-item="toc" wx:key="text">
+        <text class="toc-dot">▸</text>
+        <text class="toc-text">{{toc.text}}</text>
+      </view>
+    </view>
+
+    <view class="section-head">
+      <text class="sec-icon">◈</text>
+      <text class="sec-title">KNOWLEDGE COMIC</text>
+      <view class="sec-line"></view>
+    </view>
+
+    <view class="mode-switch">
+      <view wx:if="{{view.imageUrl && !imageFailed}}" class="mode-btn {{mode === 'image' ? 'active' : ''}}" bindtap="setMode" data-mode="image">图片</view>
+      <view wx:if="{{view.htmlAvailable}}" class="mode-btn {{mode === 'html' ? 'active' : ''}}" bindtap="setMode" data-mode="html">网页原版</view>
+      <view class="mode-btn {{mode === 'text' ? 'active' : ''}}" bindtap="setMode" data-mode="text">纯文本</view>
+    </view>
+
+    <!-- 图片形式：调用 /articles/{id}/image 分享图接口，按原图比例展示，可点击放大 -->
+    <view wx:if="{{mode === 'image' && view.imageUrl}}" class="poster-wrap">
+      <image class="poster-img" src="{{view.imageUrl}}" mode="widthFix" bindtap="previewArticleImage" binderror="onImageError" lazy-load></image>
+      <text class="poster-hint">接口返回的 1080×1440 分享图 · 点击图片可放大查看</text>
+      <view wx:if="{{view.htmlAvailable}}" class="poster-more" bindtap="setMode" data-mode="html">查看完整正文 →</view>
+    </view>
+
+    <!-- HTML 形式：清洗并把 CSS 内联后交给原生 rich-text 渲染 -->
+    <view wx:elif="{{mode === 'html' && view.htmlAvailable}}" class="html-card">
+      <rich-text nodes="{{view.richHtml}}"></rich-text>
+    </view>
+
+    <block wx:else>
+      <view wx:if="{{!view.blocks.length}}" class="state">
+        <text class="state-text">这篇文章暂时没有可展示的文字内容。</text>
+      </view>
+
+      <view class="content">
+        <block wx:for="{{view.blocks}}" wx:key="key">
+
+          <view wx:if="{{item.type === 'heading'}}" class="blk-heading">
+            <text class="blk-heading-mark">✦</text>
+            <text class="blk-heading-text">{{item.text}}</text>
+          </view>
+
+          <view wx:elif="{{item.type === 'label'}}" class="blk-label">
+            <text>{{item.text}}</text>
+          </view>
+
+          <view wx:elif="{{item.type === 'dialogue'}}" class="bubble {{item.role === '小白' ? 'pig' : 'master'}}">
+            <text class="bubble-label">{{item.label}}</text>
+            <text class="bubble-text">{{item.text}}</text>
+          </view>
+
+          <view wx:elif="{{item.type === 'tip'}}" class="blk-tip">
+            <text>{{item.text}}</text>
+          </view>
+
+          <view wx:elif="{{item.type === 'step'}}" class="blk-step">
+            <text>{{item.text}}</text>
+          </view>
+
+          <view wx:else class="blk-text">
+            <text>{{item.text}}</text>
+          </view>
+
+        </block>
+      </view>
+    </block>
+
+    <view wx:if="{{view.prev || view.next}}" class="sibling-row">
+      <view wx:if="{{view.prev}}" class="sibling" bindtap="openSibling" data-id="{{view.prev.id}}">
+        <text class="sibling-dir">← 上一篇</text>
+        <text class="sibling-title">{{view.prev.title}}</text>
+      </view>
+      <view wx:if="{{view.next}}" class="sibling" bindtap="openSibling" data-id="{{view.next.id}}">
+        <text class="sibling-dir">下一篇 →</text>
+        <text class="sibling-title">{{view.next.title}}</text>
+      </view>
+    </view>
+
+    <view wx:if="{{view.related.length}}" class="content-block">
+      <view class="section-head">
+        <text class="sec-icon">◈</text>
+        <text class="sec-title">RELATED ARTICLES</text>
+        <view class="sec-line"></view>
+      </view>
+      <view
+        class="related-card"
+        wx:for="{{view.related}}"
+        wx:for-item="ref"
+        wx:key="id"
+        bindtap="openRelated"
+        data-id="{{ref.id}}"
+      >
+        <text class="related-title">{{ref.title}}</text>
+        <text wx:if="{{ref.summary}}" class="related-summary">{{ref.summary}}</text>
+        <text class="related-arrow">→</text>
+      </view>
+    </view>
+
+    <view class="bottom-bar">
+      <view class="back-btn" bindtap="backToList">← 返回小白财经</view>
+    </view>
+
+    <view class="source-note">内容来自{{sourceLabel}}；图片模式调用 /articles/{id}/image 分享图接口，网页原版把接口 HTML 清洗、CSS 内联后由原生 rich-text 渲染，不加载外部脚本与样式。分享图只含标题与摘要，完整正文请切换网页原版或纯文本。正文仅在本机缓存，下拉刷新可同步最新内容。收藏仅存本机、不会上传。</view>
+
+  </block>
+
+</view>

@@ -9,6 +9,8 @@
     "pages/ruler/ruler",
     "pages/thinking/thinking",
     "pages/thinkingDetail/thinkingDetail",
+    "pages/xiaobai/xiaobai",
+    "pages/xiaobaiDetail/xiaobaiDetail",
     "pages/softwares/softwares",
     "pages/myskills/myskills",
     "pages/albums/albums",

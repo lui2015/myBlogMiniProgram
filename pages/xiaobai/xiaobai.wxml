@@ -1,0 +1,121 @@
+<view class="page">
+
+  <view class="hero">
+    <view class="hero-grid"></view>
+    <text class="hero-title">XIAOBAI FINANCE</text>
+    <text class="hero-sub">// 小白学财经 · 看得懂的财经知识</text>
+    <text class="hero-stats">{{statsLine || '5 章漫画讲透一个知识点'}}</text>
+    <view class="hero-line"></view>
+  </view>
+
+  <view wx:if="{{loading}}" class="state">
+    <text class="state-text">正在同步财经文章…</text>
+  </view>
+
+  <view wx:elif="{{errorMsg}}" class="state">
+    <text class="state-text">{{errorMsg}}</text>
+    <view class="state-retry" bindtap="retry">重新加载</view>
+  </view>
+
+  <block wx:else>
+
+    <view class="search-bar">
+      <text class="search-icon">🔍</text>
+      <input
+        class="search-input"
+        type="text"
+        value="{{keyword}}"
+        placeholder="搜索标题 / 摘要 / 分类"
+        placeholder-class="search-ph"
+        confirm-type="search"
+        bindinput="onSearchInput"
+      />
+      <text wx:if="{{keyword}}" class="search-clear" catchtap="clearSearch">×</text>
+    </view>
+
+    <view class="section-head">
+      <text class="sec-icon">◈</text>
+      <text class="sec-title">CATEGORIES</text>
+      <view class="sec-line"></view>
+    </view>
+
+    <scroll-view class="tabs" scroll-x enable-flex>
+      <view
+        wx:for="{{tabs}}"
+        wx:key="id"
+        class="tab {{category === item.id ? 'active' : ''}}"
+        bindtap="onCategory"
+        data-id="{{item.id}}"
+      >
+        <text class="tab-name">{{item.name}}</text>
+        <text class="tab-count">{{item.count}}</text>
+      </view>
+    </scroll-view>
+
+    <view wx:if="{{subTabs.length > 1}}" class="sub-row">
+      <view
+        wx:for="{{subTabs}}"
+        wx:key="id"
+        class="sub-tab {{subCategory === item.id ? 'active' : ''}}"
+        bindtap="onSubCategory"
+        data-id="{{item.id}}"
+      >{{item.name}}</view>
+    </view>
+
+    <view class="section-head">
+      <text class="sec-icon">◈</text>
+      <text class="sec-title">ARTICLE LIST · {{total}}</text>
+      <view class="sec-line"></view>
+    </view>
+
+    <view class="sort-row">
+      <view
+        wx:for="{{sorts}}"
+        wx:key="value"
+        class="sort {{sort === item.value ? 'active' : ''}}"
+        bindtap="onSort"
+        data-value="{{item.value}}"
+      >{{item.name}}</view>
+    </view>
+
+    <view wx:if="{{!list.length}}" class="state">
+      <text class="state-text">没有匹配的文章，换个关键词或分类试试。</text>
+    </view>
+
+    <view
+      class="article-card"
+      wx:for="{{list}}"
+      wx:key="id"
+      bindtap="openArticle"
+      data-id="{{item.id}}"
+    >
+      <view class="article-top">
+        <text class="article-cat">{{item.categoryName}}</text>
+        <text wx:if="{{item.subCategoryName}}" class="article-subcat">{{item.subCategoryName}}</text>
+        <text wx:if="{{item.isRecommend}}" class="article-rec">精选</text>
+        <text wx:if="{{item.fav}}" class="article-fav">★</text>
+      </view>
+      <text class="article-title">{{item.title}}</text>
+      <text wx:if="{{item.summary}}" class="article-summary">{{item.summary}}</text>
+      <view class="article-foot">
+        <text class="article-date">{{item.dateText}}</text>
+        <text class="article-views">👀 {{item.viewCount}}</text>
+        <text class="article-arrow">→</text>
+      </view>
+      <view class="article-corner tl"></view>
+      <view class="article-corner br"></view>
+    </view>
+
+    <view wx:if="{{hasMore}}" class="more-btn" bindtap="loadMore">加载更多 ↓</view>
+    <view wx:else class="list-end">— 已显示全部 {{total}} 篇文章 —</view>
+
+    <view class="tip-card">
+      <text class="tip-title">◈ 数据来源</text>
+      <text class="tip-text">文章列表、分类与正文均来自{{sourceLabel}}，只在本机缓存，断网可看已缓存内容；下拉刷新可同步最新文章。详情页默认调用文章图片接口，以 1080×1440 分享图的形式展示，可切换网页原版 HTML（清洗后由原生 rich-text 渲染）或纯文本查看完整正文，不打开外部网页、不加载外部脚本。收藏仅存本机，不会上传。</text>
+    </view>
+
+    <view class="risk-note">⚠️ 内容仅为财经知识科普，不构成投资建议。投资有风险，决策需谨慎。</view>
+
+  </block>
+
+</view>
