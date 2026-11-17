@@ -8,6 +8,87 @@ const config = require('../../utils/config')
 
 const STORAGE_KEY = 'countdown_events_v1'
 
+// 工具分类：WORK / LIFE / THOUGHT / STUDY / ENJOYMENT / OTHER，tone 对应 WXSS 里的 .tone-* 配色
+const GROUPS = [
+  { key: 'work', label: 'WORK', name: '工作 · 效率', tone: 'cyan' },
+  { key: 'life', label: 'LIFE', name: '生活 · 测量', tone: 'pink' },
+  { key: 'thought', label: 'THOUGHT', name: '思考 · 模型', tone: 'purple' },
+  { key: 'study', label: 'STUDY', name: '学习 · 阅读', tone: 'amber' },
+  { key: 'enjoyment', label: 'ENJOYMENT', name: '休闲 · 娱乐', tone: 'green' },
+  { key: 'other', label: 'OTHER', name: '其他 · 杂项', tone: 'slate' }
+]
+
+const TOOLS = [
+  {
+    key: 'workday',
+    group: 'work',
+    icon: '📅',
+    name: '工作日计算器',
+    desc: '计算两个日期之间的工作日数，或推算 N 个工作日后的日期，自动识别法定节假日与调休补班。',
+    tag: '原生计算',
+    preview: '',
+    path: '/pages/workday/workday'
+  },
+  {
+    key: 'countdown',
+    group: 'life',
+    icon: '⏳',
+    name: '大事件倒计时',
+    desc: '记录每一个重要时刻，支持自然日与工作日两种倒计时方式，数据保存在本机。',
+    tag: '本机存储',
+    preview: '',
+    path: '/pages/countdown/countdown'
+  },
+  {
+    key: 'ruler',
+    group: 'life',
+    icon: '📏',
+    name: '尺子',
+    desc: '屏幕刻度尺：厘米 / 英寸刻度与数字、横向 / 竖向、全屏铺满，拖动双游标测量，可用屏幕宽度或银行卡校准。',
+    tag: '本机校准',
+    preview: '',
+    path: '/pages/ruler/ruler'
+  },
+  {
+    key: 'thinking',
+    group: 'thought',
+    icon: '🧠',
+    name: '思维模型',
+    desc: '191 个思维模型与完整解读，按 10 大分类浏览、搜索、收藏，每天认识一个模型。',
+    tag: '站点同步',
+    preview: '',
+    path: '/pages/thinking/thinking'
+  },
+  {
+    key: 'xiaobai',
+    group: 'study',
+    icon: '📈',
+    name: '小白学财经',
+    desc: '132 篇财经知识漫画，按分类浏览、搜索与收藏，5 章讲透一个概念，正文原生排版阅读。',
+    tag: '站点同步',
+    preview: '',
+    path: '/pages/xiaobai/xiaobai'
+  }
+]
+
+// 每个分组各拷一份工具对象，避免 setData 局部更新污染模块级常量；
+// 空分类作为占位保留；excludeKey 用于整体隐藏某个分类（如提审时隐藏 STUDY）
+function buildSections(tools, excludeKey) {
+  return GROUPS.filter(group => group.key !== excludeKey).map((group, index) => {
+    const list = tools.filter(item => item.group === group.key).map(item => Object.assign({}, item))
+    return {
+      key: group.key,
+      label: group.label,
+      name: group.name,
+      tone: group.tone,
+      no: `0${index + 1}`,
+      open: false,
+      countText: list.length ? `${list.length} 项` : '敬请期待',
+      tools: list
+    }
+  })
+}
+
 function readEvents() {
   try {
     const list = wx.getStorageSync(STORAGE_KEY)
@@ -19,58 +100,12 @@ function readEvents() {
 
 Page({
   data: {
-    tools: [
-      {
-        key: 'workday',
-        icon: '📅',
-        name: '工作日计算器',
-        desc: '计算两个日期之间的工作日数，或推算 N 个工作日后的日期，自动识别法定节假日与调休补班。',
-        tag: '原生计算',
-        preview: '',
-        path: '/pages/workday/workday'
-      },
-      {
-        key: 'countdown',
-        icon: '⏳',
-        name: '大事件倒计时',
-        desc: '记录每一个重要时刻，支持自然日与工作日两种倒计时方式，数据保存在本机。',
-        tag: '本机存储',
-        preview: '',
-        path: '/pages/countdown/countdown'
-      },
-      {
-        key: 'ruler',
-        icon: '📏',
-        name: '尺子',
-        desc: '屏幕刻度尺：厘米 / 英寸刻度与数字、横向 / 竖向、全屏铺满，拖动双游标测量，可用屏幕宽度或银行卡校准。',
-        tag: '本机校准',
-        preview: '',
-        path: '/pages/ruler/ruler'
-      },
-      {
-        key: 'thinking',
-        icon: '🧠',
-        name: '思维模型',
-        desc: '191 个思维模型与完整解读，按 10 大分类浏览、搜索、收藏，每天认识一个模型。',
-        tag: '站点同步',
-        preview: '',
-        path: '/pages/thinking/thinking'
-      },
-      {
-        key: 'xiaobai',
-        icon: '📈',
-        name: '小白财经',
-        desc: '132 篇财经知识漫画，按分类浏览、搜索与收藏，5 章讲透一个概念，正文原生排版阅读。',
-        tag: '站点同步',
-        preview: '',
-        path: '/pages/xiaobai/xiaobai'
-      }
-    ]
+    sections: buildSections(TOOLS)
   },
 
   onLoad() {
     if (!config.showXiaoBaiTool) {
-      this.setData({ tools: this.data.tools.filter(item => item.key !== 'xiaobai') })
+      this.setData({ sections: buildSections(TOOLS, 'study') })
     }
     this.refreshPreview()
     this.refreshThinkingPreview()
@@ -116,21 +151,25 @@ Page({
       ? `已校准 · 1 cm ≈ ${cal.value.toFixed(1)} px`
       : '未校准 · 进入后用屏幕宽度或银行卡对齐'
 
-    const patch = {}
-    const put = (key, text) => {
-      const i = this.data.tools.findIndex(item => item.key === key)
-      if (i >= 0) patch[`tools[${i}].preview`] = text
-    }
-    put('workday', weekText)
-    put('countdown', countdownText)
-    put('ruler', rulerText)
-    this.setData(patch)
+    this.setPreview('workday', weekText)
+    this.setPreview('countdown', countdownText)
+    this.setPreview('ruler', rulerText)
   },
 
-  // 按 key 定位，避免以后插入新卡片时预览索引错位
+  // 按 key 在分组里定位，避免插入 / 隐藏卡片后预览索引错位
+  findTool(key) {
+    const sections = this.data.sections || []
+    for (let i = 0; i < sections.length; i++) {
+      const index = sections[i].tools.findIndex(item => item.key === key)
+      if (index >= 0) return [i, index]
+    }
+    return null
+  },
+
   setPreview(key, text) {
-    const index = this.data.tools.findIndex(item => item.key === key)
-    if (index >= 0) this.setData({ [`tools[${index}].preview`]: text })
+    const position = this.findTool(key)
+    if (!position) return
+    this.setData({ [`sections[${position[0]}].tools[${position[1]}].preview`]: text })
   },
 
   // 思维模型预览：先读本机缓存立即显示，再静默同步站点最新列表
@@ -167,8 +206,16 @@ Page({
     finance.getAllArticles()
       .then(articles => { if (articles && articles.length) show(articles) })
       .catch(() => {
-        if (!cached.length) this.setPreview('xiaobai', '小白财经 · 联网后可浏览全部文章')
+        if (!cached.length) this.setPreview('xiaobai', '小白学财经 · 联网后可浏览全部文章')
       })
+  },
+
+  // 点击分类标题展开 / 收起该组工具；各组独立，默认全部收起
+  toggleGroup(e) {
+    const key = e.currentTarget.dataset.key
+    const index = this.data.sections.findIndex(section => section.key === key)
+    if (index < 0) return
+    this.setData({ [`sections[${index}].open`]: !this.data.sections[index].open })
   },
 
   goTool(e) {
