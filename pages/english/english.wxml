@@ -1,0 +1,105 @@
+<view class="page">
+
+  <view class="hero">
+    <view class="hero-grid"></view>
+    <text class="hero-title">DAILY ENGLISH</text>
+    <text class="hero-sub">// 每日英语 · 一日一句</text>
+    <view class="hero-line"></view>
+  </view>
+
+  <view wx:if="{{loading}}" class="state">
+    <text class="state-text">正在取今天的一句英文…</text>
+  </view>
+
+  <view wx:elif="{{errorMsg}}" class="state">
+    <text class="state-text">{{errorMsg}}</text>
+    <view class="state-retry" bindtap="retry">重新加载</view>
+  </view>
+
+  <block wx:else>
+
+    <view class="date-bar">
+      <view class="date-nav" bindtap="shiftDate" data-delta="{{-1}}">← 前一天</view>
+      <view class="date-mid">
+        <text class="date-text">{{view.dateText}}</text>
+        <text class="date-week">{{view.weekText}} · {{view.date}}</text>
+      </view>
+      <view wx:if="{{!view.isToday}}" class="date-nav" bindtap="shiftDate" data-delta="{{1}}">后一天 →</view>
+      <view wx:else class="date-nav off">今天</view>
+    </view>
+
+    <view class="section-head">
+      <text class="sec-icon">◈</text>
+      <text class="sec-title">DAILY QUOTE</text>
+      <view class="sec-line"></view>
+    </view>
+
+    <view class="quote-card">
+      <image wx:if="{{view.quote.image}}" class="quote-img" src="{{view.quote.image}}" mode="aspectFill" binderror="onImageError" lazy-load></image>
+      <view class="quote-body">
+        <text wx:if="{{view.quoteAvailable}}" class="quote-en">{{view.quote.english}}</text>
+        <text wx:else class="quote-en muted">这一天暂时没有每日一句</text>
+        <text wx:if="{{view.quoteAvailable && showChinese}}" class="quote-zh">{{view.quote.chinese}}</text>
+        <text wx:if="{{view.quoteAvailable && !showChinese}}" class="quote-hidden">中文已隐藏 · 先自己试着翻译</text>
+        <text wx:if="{{view.quote.author}}" class="quote-author">— {{view.quote.author}}</text>
+        <view wx:if="{{view.quoteAvailable}}" class="quote-actions">
+          <view class="act" bindtap="toggleChinese">{{showChinese ? '隐藏中文' : '显示中文'}}</view>
+          <view class="act {{playing ? 'on' : ''}}" bindtap="playQuote">{{playing ? '♪ 播放中' : '▶ 播放'}}</view>
+          <view class="act" bindtap="copyQuote">复制</view>
+        </view>
+        <text class="quote-src">句子来源 {{view.quote.sourceName}} · 仅作学习展示</text>
+      </view>
+    </view>
+
+    <view class="section-head">
+      <text class="sec-icon">◈</text>
+      <text class="sec-title">TODAY'S ESSAY</text>
+      <view class="sec-line"></view>
+    </view>
+
+    <view wx:if="{{view.essayAvailable}}" class="essay-card">
+      <text class="essay-title">{{view.essay.title}}</text>
+      <view class="essay-meta">
+        <text class="essay-meta-item">{{view.essay.wordCount}} 词</text>
+        <text class="essay-meta-item">{{view.essay.chunks.length}} 段</text>
+        <text wx:if="{{view.essay.addedOn}}" class="essay-meta-item">收录 {{view.essay.addedOn}}</text>
+      </view>
+
+      <view class="chunk" wx:for="{{view.essay.chunks}}" wx:for-item="chunk" wx:key="key">
+        <text class="chunk-en">{{chunk.english}}</text>
+        <text wx:if="{{showChinese}}" class="chunk-zh">{{chunk.chinese}}</text>
+      </view>
+
+      <block wx:if="{{view.essay.keywords.length}}">
+        <text class="kw-head">◈ 重点词汇 · {{view.essay.keywords.length}}</text>
+        <view class="kw-list">
+          <view class="kw" wx:for="{{view.essay.keywords}}" wx:for-item="kw" wx:key="key">
+            <text class="kw-en">{{kw.word}}</text>
+            <text class="kw-zh">{{kw.meaning}}</text>
+          </view>
+        </view>
+      </block>
+
+      <text wx:if="{{view.essay.source}}" class="essay-src">{{view.essay.source}}</text>
+    </view>
+
+    <view wx:else class="state">
+      <text class="state-text">这一天暂时没有美文内容。</text>
+    </view>
+
+    <view class="checkin-card">
+      <text class="checkin-title">◈ 学习打卡</text>
+      <text class="checkin-stat">连续 {{streak}} 天 · 本月 {{monthCount}} 天</text>
+      <text class="checkin-hint">点一下记下今天读过，记录只保存在本机</text>
+      <view class="checkin-btn {{checked ? 'done' : ''}}" bindtap="checkIn">{{checkinText}}</view>
+    </view>
+
+    <view class="bottom-bar">
+      <view class="back-btn" bindtap="backToTools">← 返回工具</view>
+    </view>
+
+    <view class="source-note">内容来自站点公开只读接口 /EglishStudy/api/daily，按日期读取并只在本机缓存，断网可看已缓存内容，下拉刷新可同步。配音与配图来自接口给出的静态资源地址，小程序内不跳转任何站外网页。</view>
+
+  </block>
+
+</view>

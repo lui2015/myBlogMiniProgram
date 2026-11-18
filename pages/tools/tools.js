@@ -4,6 +4,7 @@ const localData = require('../../utils/holidays')
 const rulerStorage = require('../../utils/ruler')
 const thinkingApi = require('../../utils/thinkingApi')
 const finance = require('../../utils/xiaobaiApi')
+const englishApi = require('../../utils/englishApi')
 const config = require('../../utils/config')
 
 const STORAGE_KEY = 'countdown_events_v1'
@@ -68,13 +69,22 @@ const TOOLS = [
     tag: '站点同步',
     preview: '',
     path: '/pages/xiaobai/xiaobai'
+  },
+  {
+    key: 'english',
+    group: 'study',
+    icon: '🔤',
+    name: '每日英语',
+    desc: '每天一句英文美句与一篇短美文，中英对照、重点词汇、配音跟读，可回看往期并在本机打卡。',
+    tag: '站点同步',
+    preview: '',
+    path: '/pages/english/english'
   }
 ]
 
-// 每个分组各拷一份工具对象，避免 setData 局部更新污染模块级常量；
-// 空分类作为占位保留；excludeKey 用于整体隐藏某个分类（如提审时隐藏 STUDY）
-function buildSections(tools, excludeKey) {
-  return GROUPS.filter(group => group.key !== excludeKey).map((group, index) => {
+// 每个分组各拷一份工具对象，避免 setData 局部更新污染模块级常量；空分类作为占位保留
+function buildSections(tools) {
+  return GROUPS.map((group, index) => {
     const list = tools.filter(item => item.group === group.key).map(item => Object.assign({}, item))
     return {
       key: group.key,
@@ -105,11 +115,13 @@ Page({
 
   onLoad() {
     if (!config.showXiaoBaiTool) {
-      this.setData({ sections: buildSections(TOOLS, 'study') })
+      // 只隐藏财经工具，STUDY 里的「每日英语」仍保留
+      this.setData({ sections: buildSections(TOOLS.filter(item => item.key !== 'xiaobai')) })
     }
     this.refreshPreview()
     this.refreshThinkingPreview()
     this.refreshFinancePreview()
+    this.refreshEnglishPreview()
     // 取到站点最新节假日数据后，用真实数据刷新预览
     holidayLoader.load().then(({ index }) => this.refreshPreview(index))
   },
@@ -118,6 +130,7 @@ Page({
     this.refreshPreview(this.cachedIndex)
     this.refreshThinkingPreview()
     this.refreshFinancePreview()
+    this.refreshEnglishPreview()
   },
 
   // 前三个工具的预览完全由本机 JS 计算，不请求任何网页
@@ -207,6 +220,26 @@ Page({
       .then(articles => { if (articles && articles.length) show(articles) })
       .catch(() => {
         if (!cached.length) this.setPreview('xiaobai', '小白学财经 · 联网后可浏览全部文章')
+      })
+  },
+
+  // 每日英语预览：先读本机缓存，再静默同步今日一句
+  refreshEnglishPreview() {
+    const today = englishApi.todayStr()
+    const cached = englishApi.getOfflineDaily(today)
+    const show = daily => {
+      if (!daily) return
+      const quote = daily.quote && daily.quote.english
+      const essay = daily.essay && daily.essay.title
+      const text = quote || essay || ''
+      const short = text.length > 18 ? `${text.slice(0, 18)}…` : text
+      this.setPreview('english', short ? `今日 · ${short}` : '每日一句 + 今日美文')
+    }
+    if (cached) show(cached)
+    englishApi.getDaily(today)
+      .then(res => { if (res && res.data) show(res.data) })
+      .catch(() => {
+        if (!cached) this.setPreview('english', '每日一句 + 今日美文 · 联网后可见')
       })
   },
 
