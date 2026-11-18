@@ -43,24 +43,43 @@
       <view class="sec-line"></view>
     </view>
 
-    <view class="mode-switch">
-      <view wx:if="{{view.imageUrl && !imageFailed}}" class="mode-btn {{mode === 'image' ? 'active' : ''}}" bindtap="setMode" data-mode="image">图片</view>
-      <view wx:if="{{view.htmlAvailable}}" class="mode-btn {{mode === 'html' ? 'active' : ''}}" bindtap="setMode" data-mode="html">网页原版</view>
-      <view class="mode-btn {{mode === 'text' ? 'active' : ''}}" bindtap="setMode" data-mode="text">纯文本</view>
+    <!-- 网页原版：正文交给 rich-text，角色头像用原生 image 显示（rich-text 只支持网络图片） -->
+    <view wx:if="{{view.htmlAvailable}}" class="html-card">
+      <block wx:if="{{view.segments.length}}">
+        <block wx:for="{{view.segments}}" wx:for-item="seg" wx:key="key">
+
+          <rich-text wx:if="{{seg.type === 'html'}}" class="html-seg" nodes="{{seg.html}}"></rich-text>
+
+          <view wx:elif="{{seg.type === 'cast'}}" class="cast-row">
+            <view class="cast-item">
+              <image wx:if="{{seg.leftSrc}}" class="cast-avatar" src="{{seg.leftSrc}}" mode="aspectFill" binderror="onAvatarError" data-index="{{index}}" data-side="leftSrc"></image>
+              <view wx:else class="cast-avatar cast-avatar-empty"><text>{{seg.leftFallback}}</text></view>
+              <text class="cast-name">{{seg.left.name}}</text>
+              <text wx:if="{{seg.left.role}}" class="cast-role">{{seg.left.role}}</text>
+            </view>
+            <text class="cast-vs">VS</text>
+            <view class="cast-item">
+              <image wx:if="{{seg.rightSrc}}" class="cast-avatar" src="{{seg.rightSrc}}" mode="aspectFill" binderror="onAvatarError" data-index="{{index}}" data-side="rightSrc"></image>
+              <view wx:else class="cast-avatar cast-avatar-empty"><text>{{seg.rightFallback}}</text></view>
+              <text class="cast-name">{{seg.right.name}}</text>
+              <text wx:if="{{seg.right.role}}" class="cast-role">{{seg.right.role}}</text>
+            </view>
+          </view>
+
+          <view wx:elif="{{seg.type === 'dialogue'}}" class="dlg-row {{seg.reverse ? 'reverse' : ''}}">
+            <image wx:if="{{seg.src}}" class="dlg-avatar" src="{{seg.src}}" mode="aspectFill" binderror="onAvatarError" data-index="{{index}}" data-side="src"></image>
+            <view wx:else class="dlg-avatar dlg-avatar-empty"><text>{{seg.fallback}}</text></view>
+            <view class="dlg-bubble {{seg.reverse ? 'master' : 'pig'}}">
+              <rich-text nodes="{{seg.html}}"></rich-text>
+            </view>
+          </view>
+
+        </block>
+      </block>
+      <rich-text wx:else nodes="{{view.richHtml}}"></rich-text>
     </view>
 
-    <!-- 图片形式：调用 /articles/{id}/image 分享图接口，按原图比例展示，可点击放大 -->
-    <view wx:if="{{mode === 'image' && view.imageUrl}}" class="poster-wrap">
-      <image class="poster-img" src="{{view.imageUrl}}" mode="widthFix" bindtap="previewArticleImage" binderror="onImageError" lazy-load></image>
-      <text class="poster-hint">接口返回的 1080×1440 分享图 · 点击图片可放大查看</text>
-      <view wx:if="{{view.htmlAvailable}}" class="poster-more" bindtap="setMode" data-mode="html">查看完整正文 →</view>
-    </view>
-
-    <!-- HTML 形式：清洗并把 CSS 内联后交给原生 rich-text 渲染 -->
-    <view wx:elif="{{mode === 'html' && view.htmlAvailable}}" class="html-card">
-      <rich-text nodes="{{view.richHtml}}"></rich-text>
-    </view>
-
+    <!-- 接口没有 HTML 时用结构化文字兜底，避免正文空白 -->
     <block wx:else>
       <view wx:if="{{!view.blocks.length}}" class="state">
         <text class="state-text">这篇文章暂时没有可展示的文字内容。</text>
@@ -134,7 +153,7 @@
       <view class="back-btn" bindtap="backToList">← 返回小白财经</view>
     </view>
 
-    <view class="source-note">内容来自{{sourceLabel}}；图片模式调用 /articles/{id}/image 分享图接口，网页原版把接口 HTML 清洗、CSS 内联后由原生 rich-text 渲染，不加载外部脚本与样式。分享图只含标题与摘要，完整正文请切换网页原版或纯文本。正文仅在本机缓存，下拉刷新可同步最新内容。收藏仅存本机、不会上传。</view>
+    <view class="source-note">内容来自{{sourceLabel}}；正文把接口 HTML 清洗、CSS 内联后由原生 rich-text 渲染，角色头像取自文章内嵌图片并转成本机图片文件显示，不加载外部脚本与样式。正文仅在本机缓存，下拉刷新可同步最新内容。收藏仅存本机、不会上传。</view>
 
   </block>
 

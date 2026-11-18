@@ -1,8 +1,18 @@
 const api = require('../../utils/api')
-const { resolveFields } = require('../../utils/util')
+const { resolveFields, resolveUrl } = require('../../utils/util')
 const categories = require('../../utils/categories')
 
 const MAX_ROWS = 5
+// 列表上方的内容类型切换，与分类导览、全站搜索共用同一份配置
+const TYPE_TABS = categories.CATEGORIES.map(item => ({
+  key: item.key,
+  name: item.name,
+  icon: item.icon,
+  en: item.en,
+  unit: item.unit,
+  section: item.section,
+  path: item.path
+}))
 
 function text(value) {
   return String(value == null ? '' : value).trim()
@@ -30,17 +40,21 @@ function rowFor(key, item, index) {
   }
   if (key === 'album') {
     const count = (item.photos && item.photos.length) || item.count || 0
+    const first = Array.isArray(item.photos) ? item.photos[0] : null
+    const firstSrc = typeof first === 'string' ? first : (first && (first.src || first.url || first.cover))
     return {
       id, title: text(item.name) || '未命名相册',
       subtitle: `${count} 张照片`,
-      path: `/pages/album/album?id=${enc}`
+      path: `/pages/album/album?id=${enc}`,
+      thumb: resolveUrl(item.cover || firstSrc)
     }
   }
   if (key === 'software') {
     return {
       id, title: text(item.name) || '未命名作品',
       subtitle: text(item.description),
-      path: `/pages/softwares/softwares?id=${enc}`
+      path: `/pages/softwares/softwares?id=${enc}`,
+      thumb: resolveUrl(item.image)
     }
   }
   if (key === 'skill') {
@@ -71,6 +85,14 @@ Page({
     works: [],
     categories: [],
     currentCategory: '全部',
+    types: TYPE_TABS,
+    currentType: 'article',
+    currentTypeName: '文章',
+    currentTypePath: '',
+    sectionTitle: 'LATEST ARTICLES',
+    typeRows: [],
+    typeLoading: false,
+    typeError: '',
     keyword: '',
     total: 0,
     loading: true,
@@ -86,6 +108,7 @@ Page({
 
   onLoad() {
     this.allWorks = []
+    this.typeCache = {}
     this.scrollTop = 0
     this.searchSeq = 0
     this.fetchWorks()
@@ -97,9 +120,16 @@ Page({
   },
 
   onPullDownRefresh() {
-    const task = this.data.searching
-      ? this.searchAll()
-      : Promise.all([this.fetchWorks(), this.loadGuides()])
+    let task
+    if (this.data.searching) {
+      task = this.searchAll()
+    } else if (this.data.currentType === 'article') {
+      task = Promise.all([this.fetchWorks(), this.loadGuides()])
+    } else {
+      // 强制刷新当前类型，避免下拉后仍是缓存
+      this.typeCache[this.data.currentType] = null
+      task = Promise.all([this.loadTypeRows(this.data.currentType), this.loadGuides()])
+    }
     task.then(() => wx.stopPullDownRefresh())
   },
 
@@ -122,8 +152,11 @@ Page({
     wx.navigateTo({ url: item.path })
   },
 
-  // 文章就在本页，点击「文章」卡片滚动到下方列表
+  // 文章就在本页，点击「文章」卡片切回文章类型并滚动到下方列表
   scrollToArticles() {
+    if (this.data.currentType !== 'article') {
+      this.onTypeTap({ currentTarget: { dataset: { key: 'article' } } })
+    }
     wx.createSelectorQuery().in(this).select('.article-section').boundingClientRect(rect => {
       if (!rect) return
       wx.pageScrollTo({
@@ -145,7 +178,7 @@ Page({
           }
         })
         this.setData({ categories: cats, total: res.total, loading: false })
-        this.applyFilter()
+        this.renderCurrent()
       })
       .catch(err => {
         this.setData({
@@ -161,6 +194,83 @@ Page({
       ? this.allWorks
       : this.allWorks.filter(work => work.category === currentCategory)
     this.setData({ works, countText: `共 ${works.length} 篇文章` })
+  },
+
+  // 当前内容类型：文章用原有卡片列表，其它类型按接口数据渲染通用行
+  renderCurrent() {
+    if (this.data.currentType === 'article') {
+      this.setData({ typeLoading: false, typeError: '', typeRows: [] })
+      this.applyFilter()
+      return Promise.resolve()
+    }
+    return this.loadTypeRows(this.data.currentType)
+  },
+
+  onTypeTap(e) {
+    const key = e.currentTarget.dataset.key
+    const item = categories.byKey(key)
+    if (!item || key === this.data.currentType) return
+    this.setData({
+      currentType: key,
+      currentTypeName: item.name,
+      currentTypePath: item.path,
+      currentCategory: '全部',
+      sectionTitle: `LATEST ${item.en}`,
+      typeRows: [],
+      typeError: ''
+    })
+    this.renderCurrent()
+  },
+
+  // 按需拉取对应模块，按类型缓存，切换回来不重复请求
+  loadTypeRows(key) {
+    const item = categories.byKey(key)
+    if (!item) return Promise.resolve()
+    this.typeCache = this.typeCache || {}
+    const cached = this.typeCache[key]
+    if (cached) {
+      this.showTypeRows(key, cached)
+      return Promise.resolve()
+    }
+    this.setData({ typeLoading: true, typeError: '' })
+    return api.getList(item.section, { pageSize: 200 })
+      .then(res => {
+        const items = Array.isArray(res.items) ? res.items : []
+        const entry = { items, total: res.total || items.length }
+        this.typeCache[key] = entry
+        if (this.data.currentType === key) this.showTypeRows(key, entry)
+      })
+      .catch(err => {
+        if (this.data.currentType === key) {
+          this.setData({ typeLoading: false, typeError: err.message || '加载失败，请检查网络与合法域名配置' })
+        }
+      })
+  },
+
+  showTypeRows(key, entry) {
+    const item = categories.byKey(key)
+    if (!item) return
+    const rows = entry.items.map((raw, index) => {
+      const row = rowFor(item.key, raw, index)
+      return Object.assign({ thumb: '', icon: item.icon }, row, { path: row.path || item.path })
+    })
+    this.setData({
+      typeLoading: false,
+      typeRows: rows,
+      countText: `共 ${entry.total} ${item.unit} · ${item.name}`
+    })
+  },
+
+  openTypePage() {
+    const path = this.data.currentTypePath
+    if (path) wx.navigateTo({ url: path })
+  },
+
+  // 缩略图加载失败改为类型图标占位，避免出现破图
+  onThumbError(e) {
+    const index = Number(e.currentTarget.dataset.index)
+    if (!isFinite(index) || index < 0) return
+    this.setData({ [`typeRows[${index}].thumb`]: '' })
   },
 
   onCategoryTap(e) {
@@ -187,7 +297,8 @@ Page({
       searchTotal: 0,
       emptyText: ''
     })
-    return this.fetchWorks()
+    // 清空搜索后回到当前类型；非文章类型直接用缓存，无需再拉文章
+    return this.data.currentType === 'article' ? this.fetchWorks() : this.renderCurrent()
   },
 
   // 全站搜索：并发查 6 类作品，逐类独立失败不影响其它类
@@ -262,7 +373,9 @@ Page({
 
   onRetry() {
     if (this.data.searching) return this.searchAll()
-    return this.fetchWorks()
+    if (this.data.currentType === 'article') return this.fetchWorks()
+    this.typeCache[this.data.currentType] = null
+    return this.loadTypeRows(this.data.currentType)
   },
 
   goDetail(e) {

@@ -39,7 +39,7 @@
   <view class="article-section">
     <view class="sec-header">
       <text class="sec-icon">◈</text>
-      <text class="sec-title">{{searching ? 'SEARCH RESULTS' : 'LATEST ARTICLES'}}</text>
+      <text class="sec-title">{{searching ? 'SEARCH RESULTS' : sectionTitle}}</text>
       <view class="sec-line"></view>
     </view>
 
@@ -56,7 +56,21 @@
       <text wx:if="{{keyword}}" class="search-clear" bindtap="clearSearch">✕</text>
     </view>
 
+    <!-- 内容类型切换：文章 / 相册 / 诗词 / 我的思考 / 软件 / 技能 -->
     <scroll-view wx:if="{{!searching}}" class="cat-scroll" scroll-x enable-flex show-scrollbar="{{false}}">
+      <view class="cat-list">
+        <text
+          class="cat-item type-item {{currentType === item.key ? 'active' : ''}}"
+          wx:for="{{types}}"
+          wx:key="key"
+          bindtap="onTypeTap"
+          data-key="{{item.key}}"
+        >{{item.icon}} {{item.name}}</text>
+      </view>
+    </scroll-view>
+
+    <!-- 文章内部分类，仅在文章类型下显示 -->
+    <scroll-view wx:if="{{!searching && currentType === 'article'}}" class="cat-scroll sub-cat" scroll-x enable-flex show-scrollbar="{{false}}">
       <view class="cat-list">
         <text
           class="cat-item {{currentCategory === item ? 'active' : ''}}"
@@ -112,34 +126,76 @@
       </view>
     </view>
 
-    <!-- 未搜索时展示文章列表 -->
+    <!-- 未搜索时按当前内容类型展示列表 -->
     <block wx:else>
-      <view wx:if="{{loading}}" class="state"><text class="state-text">正在加载…</text></view>
-      <view wx:elif="{{error}}" class="state">
-        <text class="state-text">{{error}}</text>
-        <view class="state-retry" bindtap="onRetry">重新加载</view>
-      </view>
-      <view wx:elif="{{!works.length}}" class="state">
-        <text class="state-text">没有找到匹配的文章</text>
-      </view>
-      <view wx:else class="list">
-        <view class="work-card" wx:for="{{works}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}">
-          <image class="work-cover" src="{{item.cover}}" mode="aspectFill" lazy-load></image>
-          <view class="work-body">
-            <view class="work-meta">
-              <text class="cy-tag">{{item.category}}</text>
-              <text class="work-date">{{item.date}}</text>
-            </view>
-            <text class="work-title">{{item.title}}</text>
-            <text class="work-excerpt">{{item.excerpt}}</text>
-            <view class="work-foot">
-              <text class="work-tag" wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this">#{{tag}}</text>
-              <text class="work-readtime">{{item.readTime}}</text>
+      <block wx:if="{{currentType === 'article'}}">
+        <view wx:if="{{loading}}" class="state"><text class="state-text">正在加载…</text></view>
+        <view wx:elif="{{error}}" class="state">
+          <text class="state-text">{{error}}</text>
+          <view class="state-retry" bindtap="onRetry">重新加载</view>
+        </view>
+        <view wx:elif="{{!works.length}}" class="state">
+          <text class="state-text">没有找到匹配的文章</text>
+        </view>
+        <view wx:else class="list">
+          <view class="work-card" wx:for="{{works}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}">
+            <image class="work-cover" src="{{item.cover}}" mode="aspectFill" lazy-load></image>
+            <view class="work-body">
+              <view class="work-meta">
+                <text class="cy-tag">{{item.category}}</text>
+                <text class="work-date">{{item.date}}</text>
+              </view>
+              <text class="work-title">{{item.title}}</text>
+              <text class="work-excerpt">{{item.excerpt}}</text>
+              <view class="work-foot">
+                <text class="work-tag" wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this">#{{tag}}</text>
+                <text class="work-readtime">{{item.readTime}}</text>
+              </view>
             </view>
           </view>
+          <view class="list-end">— 已加载全部 {{total}} 篇 —</view>
         </view>
-        <view class="list-end">— 已加载全部 {{total}} 篇 —</view>
-      </view>
+      </block>
+
+      <block wx:else>
+        <view wx:if="{{typeLoading}}" class="state"><text class="state-text">正在加载{{currentTypeName}}…</text></view>
+        <view wx:elif="{{typeError}}" class="state">
+          <text class="state-text">{{typeError}}</text>
+          <view class="state-retry" bindtap="onRetry">重新加载</view>
+        </view>
+        <view wx:elif="{{!typeRows.length}}" class="state">
+          <text class="state-text">暂无{{currentTypeName}}内容</text>
+        </view>
+        <view wx:else class="type-list">
+          <view
+            class="result-item"
+            wx:for="{{typeRows}}"
+            wx:key="id"
+            bindtap="onResultTap"
+            data-url="{{item.path}}"
+          >
+            <image
+              wx:if="{{item.thumb}}"
+              class="type-thumb"
+              src="{{item.thumb}}"
+              mode="aspectFill"
+              lazy-load
+              binderror="onThumbError"
+              data-index="{{index}}"
+            ></image>
+            <view wx:else class="type-thumb type-thumb-fallback">
+              <text class="type-thumb-icon">{{item.icon}}</text>
+            </view>
+            <view class="result-body">
+              <text class="result-title">{{item.title}}</text>
+              <text wx:if="{{item.subtitle}}" class="result-sub">{{item.subtitle}}</text>
+            </view>
+            <text class="result-arrow">→</text>
+          </view>
+          <view class="type-more" bindtap="openTypePage">查看全部{{currentTypeName}} →</view>
+          <view class="list-end">— {{countText}} —</view>
+        </view>
+      </block>
     </block>
   </view>
 

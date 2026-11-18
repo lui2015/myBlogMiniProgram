@@ -15,13 +15,13 @@
 | 类型 | 域名 |
 |------|------|
 | request 合法域名 | `https://www.luliming.xyz` |
-| downloadFile 合法域名 | `https://www.luliming.xyz`、`https://picsum.photos`、`https://staticedu-wps-cache.iciba.com` |
+| downloadFile 合法域名 | `https://www.luliming.xyz`、`https://lyman-1258661753.cos.ap-guangzhou.myqcloud.com`、`https://picsum.photos`、`https://staticedu-wps-cache.iciba.com` |
 
 说明：
 
 - `request` 用于调用所有 `/api/open/...` 接口、站点节假日数据 `/workday/holidays.json`、思维模型只读接口 `/thinkingModel/api/v1/...`、小白财经只读接口 `/XiaoBaiFinance/api/...`（或开放平台 v1 `/XiaoBaiFinance/api/open/v1/...`），以及每日英语只读接口 `/EglishStudy/api/daily`。
-- `downloadFile` 用于 `wx.previewImage` 预览照片、文章封面、相册图片、软件作品封面、自媒体二维码、技能证书，`<image src>` 加载小白财经的文章分享图（SVG），以及每日英语的配图与配音（金山词霸静态资源 `staticedu-wps-cache.iciba.com`）。若 `xiaoBaiProxyBase` 指向自有代理域名，也需把该域名加入白名单。
-- 站点图片里还有 `picsum.photos`（示例占位图），如后续换成其他图床，需同步加入白名单。
+- `downloadFile` 用于 `wx.previewImage` 预览照片、文章封面、相册图片、软件作品封面、自媒体二维码、技能证书，以及每日英语的配图与配音（金山词霸静态资源 `staticedu-wps-cache.iciba.com`）。
+- 站点图片主要存放在腾讯云 COS `lyman-1258661753.cos.ap-guangzhou.myqcloud.com`（文章封面、相册封面、软件作品封面等），另有 `picsum.photos` 示例占位图；作品 Tab 内容类型切换后的列表缩略图也来自 COS，换图床需同步加入白名单。
 - 域名必须 HTTPS、已备案、不带端口和路径。
 - **开发阶段**可在微信开发者工具「详情 → 本地设置」勾选 **不校验合法域名** 临时调试。
 
@@ -30,7 +30,7 @@
 | 页面 | 路径 | 使用的接口模块 |
 |------|------|----------------|
 | 首页 | `pages/index/index` | `hero` `albums`（相框照片 + 分类数量）`photos`（仅兜底）`poems` `myskills` `works` `softwares` `quotes` |
-| 作品（分类导览 + 全站搜索 + 文章） | `pages/works/works` | 6 类作品（`q` 并发搜索）+ `/api/open` 索引 + `works`（分类筛选） |
+| 作品（分类导览 + 类型切换 + 全站搜索） | `pages/works/works` | 6 类作品（`q` 并发搜索 + 类型切换按需拉取）+ `/api/open` 索引 + `works`（文章内分类筛选） |
 | 文章详情 | `pages/detail/detail` | `works/{id}`，Markdown 正文解析渲染 |
 | 软件作品 | `pages/softwares/softwares` | `softwares`（网格 + 详情弹层） |
 | 技能作品 | `pages/myskills/myskills` | `myskills`（全量列表 + `q` 搜索 + 复制地址） |
@@ -41,7 +41,7 @@
 | 思维模型库 | `pages/thinking/thinking` | `/thinkingModel/api/v1/models`（分页拉全量）`/categories` `/stats`，搜索用 `q` |
 | 思维模型详情 | `pages/thinkingDetail/thinkingDetail` | `/thinkingModel/api/v1/models/{slug}` |
 | 小白财经 | `pages/xiaobai/xiaobai` | `/XiaoBaiFinance/api/articles`（分页拉全量）`/categories` |
-| 小白财经详情 | `pages/xiaobaiDetail/xiaobaiDetail` | `/XiaoBaiFinance/api/articles/{id}` + `/articles/{id}/image` 分享图；默认图片 / 网页原版 HTML / 纯文本 |
+| 小白财经详情 | `pages/xiaobaiDetail/xiaobaiDetail` | `/XiaoBaiFinance/api/articles/{id}`，网页原版 HTML（分段清洗后 `rich-text` 渲染正文，文章内嵌头像转本机图片显示） |
 | 每日英语 | `pages/english/english` | `/EglishStudy/api/daily?date=YYYY-MM-DD`，每日一句 / 今日美文 / 重点词汇 / 本机打卡 |
 | 相册列表 | `pages/albums/albums` | `albums` |
 | 相册详情 | `pages/album/album` | `albums/{id}` |
@@ -67,8 +67,8 @@
 6 个内容分类（文章 / 相册 / 诗词 / 我的思考 / 软件 / 技能）统一由 `utils/categories.js` 维护：名称、英文、图标、引导文案、单位、目标路径与对应 API 模块；数量取自 `GET /api/open` 索引里各模块的 `count`。「技能」对应 `myskills` 模块与 `pages/myskills/myskills` 列表页；视频模块已按个人主体类目要求移除。
 
 - **首页**：`CATEGORY GUIDE` 横向滑动卡片作为快捷引导，右上角「全部作品」进入作品 Tab；卡片数量文案由 `guides.length` 动态生成。
-- **作品 Tab**：2 列分类网格，点击非文章分类进入对应二级页；点击「文章」滚动到本页下方的文章列表（分类筛选保持不变）。
-- **全站搜索**：作品 Tab 的搜索框并发查询 `works / albums / poems / quotes / softwares / myskills` 六个模块的 `q` 参数，结果按类型分组（每组最多 5 条，显示总条数）。文章 / 相册 / 软件进详情页，诗词 / 思考 / 技能进对应列表页并带上同一关键词；「查看全部」同理，文章组则清空搜索回到本页列表。清空关键词恢复文章列表。搜索期间有防抖、过期结果丢弃，单个模块失败不影响其它类型。
+- **作品 Tab**：2 列分类网格，点击非文章分类进入对应二级页；点击「文章」滚动到下方列表并切回文章类型。`LATEST ARTICLES` 上方还有一排**内容类型切换**（文章 / 相册 / 诗词 / 我的思考 / 软件 / 技能），选中非文章类型时本页按需 `GET /api/open/{section}?pageSize=200` 拉取该模块并渲染通用行，结果按类型缓存、下拉刷新可强制更新，底部「查看全部」进入对应二级页；文章类型下保留原有的「全部 / 分类」二级筛选，区块标题与结果计数随类型变化。列表行左侧展示图片：相册用 `cover`（缺失时取首张照片 `src`）、软件用 `image`，地址均经 `resolveUrl` 过滤危险协议；诗词 / 思考 / 技能等无图类型显示分类图标占位，图片加载失败也会自动回退为图标。
+- **全站搜索**：作品 Tab 的搜索框并发查询 `works / albums / poems / quotes / softwares / myskills` 六个模块的 `q` 参数，结果按类型分组（每组最多 5 条，显示总条数）。文章 / 相册 / 软件进详情页，诗词 / 思考 / 技能进对应列表页并带上同一关键词；「查看全部」同理，文章组则清空搜索回到本页列表。清空关键词恢复当前内容类型的列表。搜索期间有防抖、过期结果丢弃，单个模块失败不影响其它类型。
 
 ## 首页「查看更多」入口
 
@@ -103,18 +103,20 @@
 - **大事件倒计时**：对齐网页版 `/dajishi/` 的添加表单——事件名称、目标日期、自然日/工作日两种计算方式、12 个图标、卡片主题，支持删除确认。数据仅保存在本机 `wx.setStorageSync`，不做云端同步、无登录。
 - **尺子**：屏幕刻度尺，支持厘米 / 英寸（1 mm 或 1/16 in 小格）、横向 / 竖向，主刻度带 `0 / 1 / 2…` 数字标注，拖动 A / B 双游标读出间距并可复制结果。点「全屏」会隐藏所有面板让尺子铺满视口，顶部保留结果、底部保留单位 / 方向 / 重置 / 复制；页面配置了 `pageOrientation: auto`，手机横放时会自动重新测量刻度。手机系统不提供屏幕 PPI，因此提供三种校准方式：实体尺量屏幕宽度自动换算、滑块微调（含 ±0.1 / ±1 步进）、银行卡 / 1 元硬币 / A4 纸参考线对齐；校准值由 `utils/ruler.js` 存本机。精度取决于校准结果，仅供日常估测。
 - **思维模型**：对齐网页版 `/thinkingModel/` 的模型库——191 个模型 / 10 大分类 / 难度星级，每日一模型（按日期稳定选取，可「换一个」）、关键词搜索、分类与难度筛选、分页加载、我的收藏。数据走站点公开只读接口 `/thinkingModel/api/v1/`：列表按 `limit=100` 分页拉全量并缓存 24 小时，搜索用服务端 `q`（可匹配介绍等精简列表没有的字段），失败时退回本机缓存过滤；详情页读 `/models/{slug}`，渲染通俗介绍、核心洞察、记忆口诀、适用场景 / 步骤 / 误区 / 搭配、实战案例、延伸阅读与关联模型，可收藏、复制书名、跳转关联模型、分享直达详情。封装在 `utils/thinkingApi.js`，收藏仅存本机。
-- **小白财经**：对齐网页版 `/XiaoBaiFinance/` 的文章库——132 篇财经知识漫画、7 大分类（含子分类）、标题/摘要搜索、最新/最多阅读排序、分页加载、我的收藏。列表页按 `size=50` 分页拉全量并缓存；详情页读 `/articles/{id}` 与 `/articles/{id}/image`，**默认调用图片接口以图片形式展示**（1080×1440 SVG 分享图，点击放大，加载失败自动回退正文），可切换「网页原版」（原生 `rich-text`，保留原漫画的配色、渐变与对话气泡版式）与「纯文本」查看完整正文；另有目录、上一篇下一篇、相关文章、收藏与分享。封装在 `utils/xiaobaiApi.js`、`utils/xiaobaiHtml.js`（HTML 清洗 / CSS 内联）与 `utils/xiaobaiContent.js`（纯文本 blocks），页面顶部与底部都有「不构成投资建议」风险提示。
+- **小白财经**：对齐网页版 `/XiaoBaiFinance/` 的文章库——132 篇财经知识漫画、7 大分类（含子分类）、标题/摘要搜索、最新/最多阅读排序、分页加载、我的收藏。列表页按 `size=50` 分页拉全量并缓存；详情页读 `/articles/{id}`，正文以**网页原版 HTML** 呈现（原生 `rich-text`，保留原漫画的配色、渐变与对话气泡版式），角色介绍与对话头像取自文章内嵌图片、由原生 `image` 显示，接口没有 HTML 时用结构化文字兜底；另有目录、上一篇下一篇、相关文章、收藏与分享。封装在 `utils/xiaobaiApi.js`、`utils/xiaobaiHtml.js`（HTML 分段清洗 / CSS 内联 / 头像提取）、`utils/xiaobaiAvatar.js`（头像转本机图片）与 `utils/xiaobaiContent.js`（纯文本 blocks 兜底），页面顶部与底部都有「不构成投资建议」风险提示。
 - **每日英语**：对齐网页版 `/EglishStudy/`（站点标题「一日英文」）——每天一句英文美句（中英对照、可隐藏中文自测、配音跟读、复制句子）与一篇短美文（分段中英对照、重点词汇），支持按日期回看往期、本机学习打卡（连续天数 / 本月天数）。数据来自站内公开只读接口 `/EglishStudy/api/daily`，按日期缓存、断网可看已缓存内容，下拉刷新可强制同步。封装在 `utils/englishApi.js`，打卡记录仅存本机。
 
 工具集合页按 **WORK**（工作日计算器）、**LIFE**（大事件倒计时、尺子）、**THOUGHT**（思维模型）、**STUDY**（小白学财经、每日英语）、**ENJOYMENT**、**OTHER**（均为暂无工具的预留分类）六个分类**默认收起**，点击分组标题可展开或收起该组工具（各组独立，可同时展开多个），每组是一张带独立配色的折叠卡片，展开的工具以卡片内行呈现；空分类展开后显示「这个分类的工具还在准备中，敬请期待」；`showXiaoBaiTool` 设为 `false` 时只隐藏「小白学财经」工具，STUDY 分组与「每日英语」仍保留。页面还会显示本机实时计算出的预览（如「本周 5 个工作日」、尺子是否已校准、今日模型、最新财经文章数、今日英文句）。节假日数据优先从站点 `holidays.json`（2024–2028）拉取，失败时回退到 `utils/holidays.js` 内置数据，断网也能用。思维模型、小白财经数据优先读站点只读接口，只在本机缓存，断网可看已缓存内容，下拉刷新可强制同步。尺子不联网、不申请任何权限。
 
 ## 小白财经数据源与 API Key
 
-- 参考站点：`/XiaoBaiFinance/`；数据接口文档：`GET /XiaoBaiFinance/api/open/docs?doc=data`（v1.1 新增文章分享图接口），能力索引 `GET /XiaoBaiFinance/api/open/v1`。
-- 默认 `xiaoBaiSource: 'public'`，走**站内公开只读接口** `/XiaoBaiFinance/api/articles`、`/articles/{id}`、`/articles/{id}/image`、`/categories`，无需密钥、开箱即用；返回结构与文档 v1 基本一致（v1 分类多包一层 `data.list`、`hasMore`，站内由 `total/page/size` 推算）。
-- 文档里的开放平台 v1 接口 `/XiaoBaiFinance/api/open/v1/*` **需要 API Key**（`Authorization: Bearer <key>`），且文档明确要求服务端到服务端调用、不要把明文密钥放进前端。如需切换：把 `xiaoBaiSource` 改为 `'open'`，并把 `xiaoBaiProxyBase` 指向自己的服务端代理（代理负责注入密钥，小程序端不带 Key）；`xiaoBaiApiKey` 仅供本地调试，切勿提交仓库或打包发布。**图片接口是例外**：`<image src>` 与 `wx.previewImage` 都无法自定义请求头，所以未配置代理时 `getArticleImageUrl()` 返回空地址，详情页自动退回正文模式；走代理时图片路径与数据接口共用 `xiaoBaiProxyBase`，代理域名须一并加入 `downloadFile` 合法域名。
-- 文章 `contentHtml` 是带内联样式的完整 HTML 漫画页（含 87 条 CSS 规则与内联 SVG）。`utils/xiaobaiHtml.js` 会剔除 `script` / `style` 块 / `svg` / 伪元素，按标签、属性、CSS 声明白名单重建 HTML，并把 class 规则**内联**到 `style`（`rich-text` 不认 class 与 `<style>`），渐变另补纯色兜底；「网页原版」模式用原生 `rich-text` 渲染，不打开外部网页、不加载外部脚本与样式。`utils/xiaobaiContent.js` 另生成纯文本 blocks 作为「纯文本」模式与兜底。缓存只存清洗后的富文本（单篇约 30 KB）与纯文本，不缓存原始 HTML（单篇可达数百 KB）。
-- **图片形式（默认）**：文档 v1.1 新增 `GET /articles/{idOrSlug}/image`，返回 **1080×1440 竖版 SVG 分享图**（`Content-Type: image/svg+xml`），内容为品牌头、分类、标题、摘要、发布日期与风险提示；开放平台列表 `list[].imageUrl` 与详情 `data.imageUrl` 是该地址的发现方式。站内公开同源接口 `GET /XiaoBaiFinance/api/articles/{id}/image` 无需鉴权、返回同一张图（实测 200，约 3.4 KB），可直接交给小程序 `<image>`；站内公开 JSON **暂不返回** `imageUrl`，故 `utils/xiaobaiApi.js` 按文档路径用文章 `id` 构造，只拼接白名单基址与 `encodeURIComponent` 后的编号，且只接受 HTTPS 结果，不把接口返回的任意链接传给 `<image>`。详情页默认「图片」模式以 `<image mode="widthFix">` 展示、点击 `wx.previewImage` 放大；SVG 不含脚本、不引用外部资源，中文字体依赖系统字体，个别机型不渲染时 `binderror` 会自动切到正文。分享图是标题卡片而非全文长图，完整正文请切「网页原版」或「纯文本」。个人主体小程序不支持 `web-view`，因此没有采用直接嵌入网页的方案。
+- 参考站点：`/XiaoBaiFinance/`；数据接口文档：`GET /XiaoBaiFinance/api/open/docs?doc=data`（v1.1），能力索引 `GET /XiaoBaiFinance/api/open/v1`。
+- 默认 `xiaoBaiSource: 'public'`，走**站内公开只读接口** `/XiaoBaiFinance/api/articles`、`/articles/{id}`、`/categories`，无需密钥、开箱即用；返回结构与文档 v1 基本一致（v1 分类多包一层 `data.list`、`hasMore`，站内由 `total/page/size` 推算）。
+- 文档里的开放平台 v1 接口 `/XiaoBaiFinance/api/open/v1/*` **需要 API Key**（`Authorization: Bearer <key>`），且文档明确要求服务端到服务端调用、不要把明文密钥放进前端。如需切换：把 `xiaoBaiSource` 改为 `'open'`，并把 `xiaoBaiProxyBase` 指向自己的服务端代理（代理负责注入密钥，小程序端不带 Key）；`xiaoBaiApiKey` 仅供本地调试，切勿提交仓库或打包发布。
+- 文章 `contentHtml` 是带内联样式的完整 HTML 漫画页（含 87 条 CSS 规则与内联 SVG）。`utils/xiaobaiHtml.js` 会剔除 `script` / `style` 块 / 无关的 `svg` / 伪元素，按标签、属性、CSS 声明白名单重建 HTML，并把 class 规则**内联**到 `style`（`rich-text` 不认 class 与 `<style>`），渐变另补纯色兜底；正文用原生 `rich-text` 渲染，不打开外部网页、不加载外部脚本与样式。`utils/xiaobaiContent.js` 另生成纯文本 blocks，仅作为接口没有 HTML 时的兜底。缓存只存清洗后的片段（单篇约 20–30 KB）与纯文本，不缓存原始 HTML（单篇可达数百 KB）。
+- **角色头像**：详情页接口与开放平台文档都**没有独立头像字段或头像接口**，头像是 `contentHtml` 内嵌的两张 SVG `<symbol>`（`<image href="data:image/png;base64,...">`，合计约 236 KB），正文用 12 处 `<svg><use href="#tang-seng|#zhu-bajie"></use></svg>` 引用；探测站内 `/avatars/*`、`/images/*`、`/api/avatars` 等静态路径均为 404。由于 `rich-text` 的 `<img>` **只支持网络图片**（base64 与本地路径都不渲染），`utils/xiaobaiHtml.js` 会把「角色介绍区 / 对话块」按 div 配平抽成独立片段，用原生 `image` 组件还原头像与气泡版式，其余正文仍交给 `rich-text`。两张头像从接口提取后固化为随包资源 `images/xiaobai/{zhu-bajie,tang-seng}.png`（256×256，共约 181 KB），`utils/xiaobaiAvatar.js` 对这两个固定角色直接返回代码包内路径——`<image>` 加载代码包资源最可靠，不依赖 `FileSystemManager` / `USER_DATA_PATH`，也不需要新增合法域名；接口以后新增的未知角色才尝试写本机文件，加载失败统一回退到 🐷 / 🙏 文字头像。既不重复把 236 KB base64 塞进每篇文章缓存，也不依赖外部图床。站点若更换头像，重新提取这两张 PNG 覆盖即可。
+- **详情缓存升级**：`getArticleView` 只认带 `segments` 的新版详情缓存；升级前只有 `richHtml` 的旧缓存会被判为过期并自动联网重建（断网时仍退回旧数据可读），避免页面一直走旧渲染、头像不显示。下拉刷新同样会强制重建。
+- 文档 v1.1 还提供 `GET /articles/{idOrSlug}/image`（1080×1440 SVG 分享图），但小程序**只保留网页原版**，不调用该接口、不展示分享图。个人主体小程序不支持 `web-view`，因此没有采用直接嵌入网页的方案。
 - 接口时间为 UTC，展示按北京时间（UTC+8）换算。
 - **审核提示**：财经科普内容对个人主体可能存在类目风险，提审前可把 `utils/config.js` 的 `showXiaoBaiTool` 改为 `false` 隐藏工具入口（页面与接口封装仍保留）。
 
@@ -146,7 +148,8 @@
 │   ├── holidayLoader.js              # 节假日数据加载与兜底
 │   ├── thinkingApi.js                # 思维模型 v1 只读接口 + 缓存 / 收藏
 │   ├── xiaobaiApi.js                 # 小白财经只读接口 + 缓存 / 收藏
-│   ├── xiaobaiHtml.js                # 财经正文 HTML 清洗 + CSS 内联（rich-text）
+│   ├── xiaobaiHtml.js                # 财经正文 HTML 分段清洗 + CSS 内联 + 头像提取
+│   ├── xiaobaiAvatar.js              # 财经角色头像 base64 → 本机图片文件
 │   ├── xiaobaiContent.js             # 财经正文 → 结构化纯文本 blocks
 │   └── englishApi.js                 # 每日英语只读接口 + 缓存 / 打卡
 └── pages/                            # 19 个页面
@@ -156,7 +159,7 @@
 
 - **只读展示**：只调用 `GET` 接口，不含任何 `POST/PUT/DELETE`；小程序端不写入站点数据。思维模型接口公开只读、免鉴权；小白财经默认走无需密钥的站内公开接口，仓库内不含任何 API Key。
 - **不含凭据**：项目里没有管理员账号密码、AppSecret、开放平台 API Key 等敏感信息；`xiaoBaiApiKey` 默认为空，仅用于本地调试，正式发布应通过服务端代理注入。
-- 博客文章正文由结构化 blocks 交给原生组件渲染，不拼接 HTML 字符串；小白财经的 HTML 正文**先经白名单清洗再由 `rich-text` 渲染**：标签映射为固定白名单，属性只保留 `style` / `src` / `colspan` / `rowspan`，CSS 属性与值也走白名单（拒绝 `url()`、`javascript:`、事件、脚本、伪元素与外链资源），图片 `src` 只接受 HTTPS。因此不执行脚本、不加载外部资源；「纯文本」模式完全不渲染 HTML。外部颜色值经格式校验后才用于样式。小白财经分享图地址由白名单基址与编码后的文章 `id` 拼成、只接受 HTTPS，不把接口返回的任意链接交给 `<image>`，SVG 由小程序原生组件渲染、绝不当作 HTML 插入页面。每日英语的配图与配音地址只放行 `staticedu-wps-cache.iciba.com` 的 HTTPS 链接、站内插画只放行 `www.luliming.xyz`，不把接口返回的任意外链用于播放、跳转或拼接页面；来源链接只展示名称，不跳转第三方平台。
+- 博客文章正文由结构化 blocks 交给原生组件渲染，不拼接 HTML 字符串；小白财经的 HTML 正文**先经白名单清洗再由 `rich-text` 渲染**：标签映射为固定白名单，属性只保留 `style` / `src` / `colspan` / `rowspan`，CSS 属性与值也走白名单（拒绝 `url()`、`javascript:`、事件、脚本、伪元素与外链资源），图片 `src` 只接受 HTTPS，没有合法地址的 `img` 直接丢弃。因此不执行脚本、不加载外部资源。外部颜色值经格式校验后才用于样式。角色头像的基线与正文一样先做白名单校验（MIME、字符集、长度 ≤400 KB、id 仅字母数字/`_`/`-`）：两个固定角色使用随包 PNG，页面 `image` 组件只引用写死的代码包路径；未知角色才写入固定前缀的 `wx.env.USER_DATA_PATH` 本机文件，不读取任意路径、不上传、不请求第三方图床；加载失败回退文字头像。每日英语的配图与配音地址只放行 `staticedu-wps-cache.iciba.com` 的 HTTPS 链接、站内插画只放行 `www.luliming.xyz`，不把接口返回的任意外链用于播放、跳转或拼接页面；来源链接只展示名称，不跳转第三方平台。
 - 作品地址、站点地址仅做中性的「复制」交互，不引导跳转浏览器或第三方平台；VISIT BLOG 的站点地址只允许 http/https。底部 SOCIAL MEDIA 的二维码来自 `socialMedia` 模块，仅用 `wx.previewImage` 预览站内图片，不跳转第三方平台；颜色值经 `#rrggbb` 白名单校验，二维码地址由 `resolveUrl` 过滤危险协议。思维模型详情里的延伸阅读同样只做「复制」，不展示、不跳转外链。
 - 倒计时事件、尺子校准值、思维模型与小白财经的收藏及缓存、每日英语的学习打卡记录仅存本机、不上传，不构成用户发布内容；尺子不联网、不申请定位或相机等权限；「关于我」不含软件下载。金融投资类内容集中在首页 SOFTWARE 模块与「小白财经」工具，可分别通过 `showSoftwareOnHome`、`showXiaoBaiTool` 一键隐藏。
 - **不含视频服务**：首页视频区块、视频列表页、`<video>` 播放组件及 `videos` 接口调用已全部移除，分类导览与全站搜索也不再包含视频类型；SOCIAL MEDIA 仅展示平台二维码，不提供任何视频播放能力，避免个人主体小程序涉及未开放的视频服务类目。
@@ -165,7 +168,7 @@
 
 - 部分图片字段是站内相对路径（`/uploads/...`、`/images/...`，如 `about.avatar`），`utils/util.js` 会自动补全为完整 HTTPS 地址。
 - `about.avatar` / `hero.avatarUrl` 等图片若加载失败，会回退显示 `avatarText` 文字头像；`GET /api/open/about` 失败时「关于我」显示上次成功同步的内容（或错误重试页），不会回退到写死的旧数据。其它页面在 `onLoad` 拉取数据，后台修改后下拉刷新即可同步；首页相框还会在 `onShow`（Tab 切回）静默重新拉取。
-- 小白财经站内公开接口不支持关键词搜索（未知 query 参数会被忽略），因此列表页搜索基于接口拉回的全量精简列表在本机过滤；切换到文档 v1 接口后仍使用同一套本地筛选逻辑。原 HTML 里的内联 SVG 插画（占正文体积约 95%）`rich-text` 不支持，网页原版模式会跳过这些矢量图，文字内容与配色、气泡版式保留。站内公开列表 / 详情 JSON 目前不含文档 v1.1 的 `imageUrl` 字段，分享图地址按文档路径由文章 `id` 构造；该图是静态 SVG 标题卡片，不是正文长图。
+- 小白财经站内公开接口不支持关键词搜索（未知 query 参数会被忽略），因此列表页搜索基于接口拉回的全量精简列表在本机过滤；切换到文档 v1 接口后仍使用同一套本地筛选逻辑。原 HTML 里占正文体积约 95% 的内联 SVG 是两张角色头像的 base64 图片，`rich-text` 无法直接渲染，现由详情页分段交给原生 `image` 组件显示；其余矢量插画仍按白名单跳过，文字内容与配色、气泡版式保留。
 
 ## 使用
 

@@ -4,6 +4,7 @@
 const config = require('./config')
 const content = require('./xiaobaiContent')
 const htmlUtil = require('./xiaobaiHtml')
+const avatarUtil = require('./xiaobaiAvatar')
 
 const ORIGIN = 'https://www.luliming.xyz'
 const PUBLIC_BASE = '/XiaoBaiFinance/api'
@@ -204,11 +205,31 @@ function buildDetailView(data) {
   if (!raw) throw new Error('文章不存在或未发布')
   const html = raw.contentHtml || ''
   const text = raw.contentText || raw.contentMd || ''
+  const built = html ? htmlUtil.buildArticleHtml(html) : { segments: [], avatars: {} }
+  const avatarPaths = html ? avatarUtil.saveAvatars(built.avatars) : {}
+  const segments = built.segments.map((seg, index) => {
+    if (seg.type === 'cast') {
+      return Object.assign({}, seg, {
+        key: 'c' + index,
+        leftSrc: avatarPaths[seg.left.id] || '',
+        rightSrc: avatarPaths[seg.right.id] || '',
+        leftFallback: avatarUtil.fallback(seg.left.id),
+        rightFallback: avatarUtil.fallback(seg.right.id)
+      })
+    }
+    if (seg.type === 'dialogue') {
+      return Object.assign({}, seg, {
+        key: 'd' + index,
+        src: avatarPaths[seg.avatarId] || '',
+        fallback: avatarUtil.fallback(seg.avatarId)
+      })
+    }
+    return Object.assign({}, seg, { key: 'h' + index })
+  })
   return {
     article: normalizeArticle(raw),
-    // 文档 v1.1 / 4.5：由文章 id 调 /articles/{id}/image 分享图接口，详情页默认以图片形式展示
-    imageUrl: getArticleImageUrl(raw.id || raw.slug),
     richHtml: html ? htmlUtil.toRichText(html) : '',
+    segments,
     htmlAvailable: !!html,
     blocks: html ? content.parseHtml(html) : content.parseText(text),
     tags: (Array.isArray(raw.tags) ? raw.tags : [])
@@ -236,11 +257,17 @@ function trimArticleCache() {
   } catch (err) {}
 }
 
+// 旧版详情缓存只有 richHtml、没有分段数据，会一直走旧渲染而看不到头像
+function isSegmentedView(data) {
+  return !!(data && Array.isArray(data.segments) && typeof data.htmlAvailable === 'boolean')
+}
+
 function getArticleView(id, force) {
   if (!id) return Promise.reject(new Error('缺少文章编号'))
   const key = 'article_' + String(id).replace(/[^a-zA-Z0-9_-]/g, '_')
   const cached = readCache(key)
-  if (!force && cached) return Promise.resolve(cached.data)
+  const usableCache = isSegmentedView(cached && cached.data) ? cached : null
+  if (!force && usableCache) return Promise.resolve(usableCache.data)
   return request('/articles/' + encodeURIComponent(id))
     .then(data => {
       const view = buildDetailView(data)
@@ -249,6 +276,7 @@ function getArticleView(id, force) {
       return view
     })
     .catch(err => {
+      if (usableCache) return usableCache.data
       if (cached) return cached.data
       throw err
     })
@@ -280,20 +308,6 @@ function toggleFavorite(id) {
   return index < 0
 }
 
-// 文章分享图（文档 v1.1 / 4.5）：GET /articles/{idOrSlug}/image → 1080×1440 SVG。
-// 站内公开只读接口无需密钥，可直接交给 <image src>；文档里的开放平台 v1 图片接口需要
-// Authorization 请求头，而 <image> / previewImage 无法自定义请求头，因此只有配置
-// xiaoBaiProxyBase、由服务端代理注入 Key 时才可用，否则退回正文模式。
-// 站内公开详情 JSON 目前不返回 imageUrl，故按文档路径用文章 id 构造；不把接口返回的
-// 任意链接交给 <image>，且小程序网络图片只允许 HTTPS。
-function getArticleImageUrl(id) {
-  if (!id) return ''
-  if (useOpen() && !config.xiaoBaiProxyBase) return ''
-  const base = basePath()
-  const url = (/^https?:\/\//i.test(base) ? '' : ORIGIN) + base + `/articles/${encodeURIComponent(String(id))}/image`
-  return /^https:\/\//i.test(url) ? url : ''
-}
-
 module.exports = {
   sourceLabel,
   formatDate,
@@ -302,7 +316,6 @@ module.exports = {
   getAllArticles,
   getOfflineArticles,
   getArticleView,
-  getArticleImageUrl,
   getFavorites,
   isFavorite,
   toggleFavorite

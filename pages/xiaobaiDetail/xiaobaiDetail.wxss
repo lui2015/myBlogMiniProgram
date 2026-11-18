@@ -384,35 +384,7 @@
   text-align: center;
 }
 
-/* ===== 展示模式：图片 / 网页原版 / 纯文本 ===== */
-.mode-switch {
-  display: flex;
-  margin-bottom: 22rpx;
-}
-
-.mode-btn {
-  flex: 1;
-  text-align: center;
-  padding: 16rpx 8rpx;
-  margin-right: 12rpx;
-  font-size: 21rpx;
-  color: #8a8a9a;
-  background-color: rgba(255, 255, 255, 0.04);
-  border: 1rpx solid rgba(255, 255, 255, 0.08);
-  border-radius: 10rpx;
-}
-
-.mode-btn:last-child {
-  margin-right: 0;
-}
-
-.mode-btn.active {
-  color: #00d4ff;
-  font-weight: bold;
-  background-color: rgba(0, 212, 255, 0.12);
-  border-color: rgba(0, 212, 255, 0.4);
-}
-
+/* ===== 网页原版 ===== */
 .html-card {
   background-color: #ffffff;
   border: 1rpx solid rgba(0, 212, 255, 0.25);
@@ -420,38 +392,105 @@
   overflow: hidden;
 }
 
-.poster-wrap {
-  padding: 12rpx;
-  background-color: rgba(255, 255, 255, 0.04);
-  border: 1rpx solid rgba(0, 212, 255, 0.2);
-  border-radius: 14rpx;
+.html-seg {
+  display: block;
 }
 
-.poster-img {
-  display: block;
-  width: 100%;
-  border-radius: 8rpx;
+/* 角色介绍区 */
+.cast-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 30rpx 20rpx;
+  background: linear-gradient(90deg, #dbeafe, #eff6ff, #dbeafe);
+  border-bottom: 2rpx dashed #93c5fd;
 }
 
-.poster-hint {
-  display: block;
-  margin-top: 14rpx;
-  font-size: 19rpx;
-  color: #5a5a6a;
+.cast-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 220rpx;
+}
+
+.cast-avatar,
+.dlg-avatar {
+  background-color: #ffffff;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.cast-avatar {
+  width: 112rpx;
+  height: 112rpx;
+  margin-bottom: 14rpx;
+  box-shadow: 0 4rpx 12rpx rgba(30, 58, 138, 0.16);
+}
+
+.cast-avatar-empty,
+.dlg-avatar-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48rpx;
+}
+
+.cast-name {
+  font-size: 24rpx;
+  font-weight: 700;
+  color: #1e3a8a;
+}
+
+.cast-role {
+  margin-top: 4rpx;
+  font-size: 20rpx;
+  color: #6b7280;
   text-align: center;
 }
 
-.poster-more {
-  margin-top: 18rpx;
-  padding: 18rpx;
-  text-align: center;
-  font-size: 21rpx;
-  color: #00d4ff;
-  background-color: rgba(0, 212, 255, 0.06);
-  border: 1rpx solid rgba(0, 212, 255, 0.3);
-  border-radius: 10rpx;
+.cast-vs {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #2563eb;
 }
 
-.poster-more:active {
-  background-color: rgba(0, 212, 255, 0.14);
+/* 对话气泡 */
+.dlg-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 16rpx;
+  padding: 12rpx 20rpx 20rpx;
+  background-color: #ffffff;
 }
+
+.dlg-row.reverse {
+  flex-direction: row-reverse;
+}
+
+.dlg-avatar {
+  width: 88rpx;
+  height: 88rpx;
+  flex-shrink: 0;
+  box-shadow: 0 2rpx 8rpx rgba(30, 58, 138, 0.14);
+}
+
+.dlg-bubble {
+  flex: 1;
+  min-width: 0;
+  padding: 20rpx 22rpx;
+  border-radius: 18rpx;
+  overflow: hidden;
+}
+
+.dlg-bubble.pig {
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  border: 1rpx solid #f59e0b;
+  border-top-left-radius: 4rpx;
+}
+
+.dlg-bubble.master {
+  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+  border: 1rpx solid #3b82f6;
+  border-top-right-radius: 4rpx;
+}
+
