@@ -142,13 +142,13 @@
       <view class="sec-line"></view>
       <view class="sec-more" bindtap="goCategory" data-key="poem">查看更多 →</view>
     </view>
-    <view wx:if="{{poem}}" class="poem-card">
+    <view wx:if="{{poem}}" class="poem-card poem-swap-{{poemSwap}}">
       <view class="poem-head">
         <text class="poem-title">{{poem.title}}</text>
-        <text class="poem-author">[{{poem.dynasty}}] {{poem.author}}</text>
+        <text class="poem-author" style="animation-delay:80ms">[{{poem.dynasty}}] {{poem.author}}</text>
       </view>
       <view class="poem-body">
-        <text class="poem-line" wx:for="{{poem.lines}}" wx:key="*this">{{item}}</text>
+        <text class="poem-line" wx:for="{{poem.lines}}" wx:key="*this" style="animation-delay:{{120 + index * 90}}ms">{{item}}</text>
       </view>
       <view class="poem-foot">
         <text class="poem-date">{{poem.date}}</text>
@@ -168,10 +168,10 @@
       <view class="sec-line"></view>
       <view class="sec-more" bindtap="goCategory" data-key="quote">查看更多 →</view>
     </view>
-    <view wx:if="{{quote}}" class="quote-card">
+    <view wx:if="{{quote}}" class="quote-card quote-swap-{{quoteSwap}}">
       <text class="quote-mark">"</text>
-      <text class="quote-text">{{quote.text}}</text>
-      <text class="quote-author">— {{quote.author}}</text>
+      <text class="quote-text" style="animation-delay:60ms">{{quote.text}}</text>
+      <text class="quote-author" style="animation-delay:180ms">— {{quote.author}}</text>
       <view class="quote-foot">
         <view class="quote-btn" bindtap="changeQuote"><text>⟳ 换一句</text></view>
       </view>
@@ -207,7 +207,21 @@
       <view class="sec-line"></view>
       <view class="sec-more" bindtap="goSoftwares">查看全部 →</view>
     </view>
-    <scroll-view class="soft-scroll" scroll-x enable-flex show-scrollbar="{{false}}">
+    <view class="soft-hint">
+      <text class="soft-hint-text">自动轮播 · 共 {{softwares.length}} 个作品</text>
+      <text class="soft-hint-page">{{softIndex}} / {{softwares.length}}</text>
+    </view>
+    <scroll-view
+      class="soft-scroll"
+      scroll-x
+      enable-flex
+      scroll-with-animation="{{softAnim}}"
+      scroll-left="{{softScrollLeft}}"
+      show-scrollbar="{{false}}"
+      bindscroll="onSoftScroll"
+      bindtouchstart="onSoftTouchStart"
+      bindtouchend="onSoftTouchEnd"
+    >
       <view class="soft-list">
         <view
           class="soft-card"
@@ -229,6 +243,9 @@
         </view>
       </view>
     </scroll-view>
+    <view class="soft-progress">
+      <view class="soft-progress-bar" style="width: {{softProgress}}%; left: {{softProgressLeft}}%"></view>
+    </view>
   </view>
 
   <!-- ====== 底部 ====== -->

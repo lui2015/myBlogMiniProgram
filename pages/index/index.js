@@ -5,17 +5,42 @@ const categories = require('../../utils/categories')
 
 const SKILL_PREVIEW = 5
 const PHOTO_LIMIT = 9
+// 首页诗词 / 思考自动轮播间隔，错开避免两块同时切换
+const POEM_AUTO_MS = 10000
+const QUOTE_AUTO_MS = 13000
+// 首页软件作品自动横向循环滚动：每 3 秒前进约一张卡片
+const SOFT_AUTO_MS = 3000
+const SOFT_RESUME_MS = 4000
+
+// A/B 交替切换动画 class，保证每次换内容都重新播放入场动画
+function flipSwap(flag) {
+  return flag === 'a' ? 'b' : 'a'
+}
+
+function splitLines(content) {
+  return String(content || '')
+    .split('\n')
+    .map(line => line.trim())
+    .filter(Boolean)
+}
 
 Page({
   data: {
     hero: {},
     photos: [],
     poem: null,
+    poemSwap: 'a',
+    quoteSwap: 'a',
     mySkills: [],
     mySkillsMore: false,
     mySkillsTotal: 0,
     works: [],
     softwares: [],
+    softIndex: 1,
+    softProgress: 16,
+    softProgressLeft: 0,
+    softScrollLeft: 0,
+    softAnim: true,
     showSoftware: config.showSoftwareOnHome,
     quote: null,
     counts: { article: 0, album: 0, poem: 0, quote: 0, software: 0 },
@@ -34,6 +59,15 @@ Page({
     // 切回首页时静默刷新相框，后台更新相册后无需重新编译
     if (this.hasShown) this.loadAlbums()
     this.hasShown = true
+    this.startAuto()
+  },
+
+  onHide() {
+    this.stopAuto()
+  },
+
+  onUnload() {
+    this.stopAuto()
   },
 
   onRetry() {
@@ -68,6 +102,8 @@ Page({
         loading: false,
         loadError: empty ? '暂时没有读取到数据，请检查网络或合法域名配置后重试' : ''
       })
+      // 数据就绪后再起表，避免首屏网络慢时定时器先空转
+      this.startAuto()
     }).catch(err => {
       console.warn('[index] 首页初始化失败', err)
       this.setData({ loading: false, loadError: '页面初始化失败，点击重试' })
@@ -183,9 +219,75 @@ Page({
     return api.getList('softwares')
       .then(res => this.setData({
         softwares: resolveFields(res.items, ['image']),
-        'counts.software': res.total
+        'counts.software': res.total,
+        softIndex: 1,
+        softProgressLeft: 0,
+        softScrollLeft: 0,
+        softAnim: true
       }))
       .catch(err => console.warn('[softwares]', err))
+  },
+
+  // 滑动时同步页码与进度条；自动滚动与手动滑动都会走这里
+  onSoftScroll(e) {
+    const detail = e.detail || {}
+    const scrollWidth = Number(detail.scrollWidth) || 0
+    const clientWidth = Number(detail.clientWidth) || 0
+    const max = Math.max(0, scrollWidth - clientWidth)
+    const left = Math.max(0, Number(detail.scrollLeft) || 0)
+    const total = this.data.softwares.length || 1
+    const thumb = scrollWidth > 0 ? Math.min(100, clientWidth / scrollWidth * 100) : 100
+    const ratio = max > 0 ? Math.min(1, left / max) : 0
+    const step = scrollWidth > 0 ? scrollWidth / total : 1
+    const atEnd = max > 0 && left >= max - 4
+    this.softViewport = { max, clientWidth, left }
+    this.setData({
+      softIndex: atEnd ? total : Math.min(total, Math.max(1, Math.floor(left / step) + 1)),
+      softProgress: thumb,
+      softProgressLeft: ratio * (100 - thumb)
+    })
+  },
+
+  // 手动触摸时让出控制权，手指离开后稍等再恢复自动轮播
+  onSoftTouchStart() {
+    this.stopSoftAuto()
+  },
+
+  onSoftTouchEnd() {
+    this.stopSoftAuto()
+    this.softResumeTimer = setTimeout(() => this.startSoftAuto(), SOFT_RESUME_MS)
+  },
+
+  startSoftAuto() {
+    this.stopSoftAuto()
+    this.softTimer = setInterval(() => this.autoScrollSoft(), SOFT_AUTO_MS)
+  },
+
+  stopSoftAuto() {
+    if (this.softTimer) {
+      clearInterval(this.softTimer)
+      this.softTimer = null
+    }
+    if (this.softResumeTimer) {
+      clearTimeout(this.softResumeTimer)
+      this.softResumeTimer = null
+    }
+  },
+
+  // 每拍前进约一张卡片；到末尾先关掉动画瞬间回起点，下一拍再恢复平滑滚动
+  autoScrollSoft() {
+    const state = this.softViewport || {}
+    const max = state.max || 0
+    if (max <= 0) return
+    const step = Math.max(1, Math.round((state.clientWidth || 300) / 2))
+    const next = (state.left || 0) + step
+    if (next >= max - 2) {
+      this.softViewport = { max, clientWidth: state.clientWidth || 300, left: 0 }
+      this.setData({ softAnim: false, softScrollLeft: 0 })
+      return
+    }
+    if (!this.data.softAnim) this.setData({ softAnim: true })
+    this.setData({ softScrollLeft: next })
   },
 
   loadQuotes() {
@@ -200,39 +302,73 @@ Page({
 
   randomPoem() {
     if (!this.poems.length) return
-    const index = Math.floor(Math.random() * this.poems.length)
-    const poem = this.poems[index]
-    const lines = String(poem.content || '')
-      .split('\n')
-      .map(line => line.trim())
-      .filter(Boolean)
-    this.setData({ poem: Object.assign({}, poem, { lines }) })
+    const poem = this.poems[Math.floor(Math.random() * this.poems.length)]
+    this.setData({
+      poem: Object.assign({}, poem, { lines: splitLines(poem.content) }),
+      poemSwap: flipSwap(this.data.poemSwap)
+    })
   },
 
   changePoem() {
+    this.showNextPoem()
+    // 手动换一首后重新计时，避免刚点完马上又被自动切走
+    this.startAuto()
+  },
+
+  showNextPoem() {
     if (this.poems.length < 2) return this.randomPoem()
     const current = this.data.poem && this.data.poem.id
     let next = this.poems[Math.floor(Math.random() * this.poems.length)]
     if (next.id === current) {
       next = this.poems[(this.poems.indexOf(next) + 1) % this.poems.length]
     }
-    const lines = String(next.content || '').split('\n').map(l => l.trim()).filter(Boolean)
-    this.setData({ poem: Object.assign({}, next, { lines }) })
+    this.setData({
+      poem: Object.assign({}, next, { lines: splitLines(next.content) }),
+      poemSwap: flipSwap(this.data.poemSwap)
+    })
   },
 
   randomQuote() {
     if (!this.quotes.length) return
-    this.setData({ quote: this.quotes[Math.floor(Math.random() * this.quotes.length)] })
+    this.setData({
+      quote: this.quotes[Math.floor(Math.random() * this.quotes.length)],
+      quoteSwap: flipSwap(this.data.quoteSwap)
+    })
   },
 
   changeQuote() {
+    this.showNextQuote()
+    this.startAuto()
+  },
+
+  showNextQuote() {
     if (this.quotes.length < 2) return this.randomQuote()
     const current = this.data.quote && this.data.quote.id
     let next = this.quotes[Math.floor(Math.random() * this.quotes.length)]
     if (next.id === current) {
       next = this.quotes[(this.quotes.indexOf(next) + 1) % this.quotes.length]
     }
-    this.setData({ quote: next })
+    this.setData({ quote: next, quoteSwap: flipSwap(this.data.quoteSwap) })
+  },
+
+  // 两块内容各自定时轮播；页面不可见时停表，手动切换后整体重新计时
+  startAuto() {
+    this.stopAuto()
+    this.poemTimer = setInterval(() => this.showNextPoem(), POEM_AUTO_MS)
+    this.quoteTimer = setInterval(() => this.showNextQuote(), QUOTE_AUTO_MS)
+    this.startSoftAuto()
+  },
+
+  stopAuto() {
+    if (this.poemTimer) {
+      clearInterval(this.poemTimer)
+      this.poemTimer = null
+    }
+    if (this.quoteTimer) {
+      clearInterval(this.quoteTimer)
+      this.quoteTimer = null
+    }
+    this.stopSoftAuto()
   },
 
   goCategory(e) {
