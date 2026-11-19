@@ -95,6 +95,12 @@ function getMiniProgramTools() {
   return request(`/api/miniprogram/tools?_t=${Date.now()}`)
 }
 
+// 全量配置（含隐藏项与空分组），仅用于判断后台是否已经收录某个分组 / 工具；
+// 不用于渲染，显示与否始终以 visibleOnly 的返回为准
+function getMiniProgramToolsAll() {
+  return request(`/api/miniprogram/tools?all=1&_t=${Date.now()}`)
+}
+
 // 站点工作日计算器的节假日数据（2024-2028，含调休补班）
 function getHolidays() {
   return request('/workday/holidays.json')
@@ -111,5 +117,6 @@ module.exports = {
   getAbout,
   getIndex,
   getMiniProgramTools,
+  getMiniProgramToolsAll,
   getHolidays
 }

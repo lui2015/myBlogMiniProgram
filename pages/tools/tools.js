@@ -7,6 +7,7 @@ const experienceApi = require('../../utils/experienceApi')
 const finance = require('../../utils/xiaobaiApi')
 const englishApi = require('../../utils/englishApi')
 const api = require('../../utils/api')
+const ieltsGame = require('../../utils/ieltsGame')
 
 const STORAGE_KEY = 'countdown_events_v1'
 // 上次成功同步的工具配置，接口不可用时离线兜底
@@ -93,6 +94,16 @@ const TOOLS = [
     tag: '站点同步',
     preview: '',
     path: '/pages/english/english'
+  },
+  {
+    key: 'words',
+    group: 'enjoyment',
+    icon: '🎴',
+    name: '背单词',
+    desc: '随机抽雅思高频词，四选一猜中文释义，10 题一轮：连击计分、即时例句、错词回顾，离线也能玩。',
+    tag: '本机词库',
+    preview: '',
+    path: '/pages/words/words'
   }
 ]
 
@@ -137,6 +148,54 @@ function safeRoute(route) {
   return /^\/pages\/[A-Za-z0-9_/-]+$/.test(value) ? value : ''
 }
 
+// 默认接口只返回 visibleOnly 的分组，后台隐藏的分组 / 工具不会出现。
+// 用 ?all=1 的全量配置判断「后台是否已经收录过」：收录过（哪怕隐藏或留空）就完全以接口为准，
+// 只有后台从未建过同名分组时才补随包工具；全量配置拿不到时不补充，隐藏优先。
+function mergeLocalGroups(sections, prevSections, allGroups) {
+  if (!Array.isArray(allGroups)) return sections
+  const backendGroups = {}
+  const backendTools = {}
+  allGroups.forEach(group => {
+    if (!group) return
+    const label = String(group.name || '').trim().toUpperCase()
+    if (label) backendGroups[label] = true
+    ;(Array.isArray(group.tools) ? group.tools : []).forEach(tool => {
+      const name = String((tool && tool.name) || '').trim()
+      if (name) backendTools[name] = true
+    })
+  })
+
+  const merged = sections.slice()
+  const prevByLabel = {}
+  const previewMap = {}
+  ;(prevSections || []).forEach(section => {
+    prevByLabel[String(section.label || '').trim().toUpperCase()] = section
+    ;(section.tools || []).forEach(tool => {
+      if (tool.preview) previewMap[tool.key] = tool.preview
+    })
+  })
+  GROUPS.forEach(preset => {
+    const exists = merged.some(section => String(section.label || '').trim().toUpperCase() === preset.label)
+    if (exists || backendGroups[preset.label]) return
+    const list = TOOLS.filter(item => item.group === preset.key && !backendTools[item.name])
+      .map(item => Object.assign({}, item, { preview: previewMap[item.key] || '' }))
+    merged.push({
+      key: `local_${preset.key}`,
+      label: preset.label,
+      name: preset.name,
+      tone: preset.tone,
+      no: '',
+      open: !!(prevByLabel[preset.label] && prevByLabel[preset.label].open),
+      countText: list.length ? `${list.length} 项` : '敬请期待',
+      tools: list
+    })
+  })
+  merged.forEach((section, i) => {
+    section.no = i + 1 < 10 ? `0${i + 1}` : String(i + 1)
+  })
+  return merged
+}
+
 // 接口只给出「显示哪些分组 / 工具」与名称，页面路径与预览能力由本地注册表提供。
 // 服务端已过滤隐藏项，这里按返回顺序渲染，并保留展开状态与已算好的预览。
 function normalizeSections(groups, prevSections) {
@@ -152,24 +211,28 @@ function normalizeSections(groups, prevSections) {
     })
   })
 
-  return (Array.isArray(groups) ? groups : []).map((group, gi) => {
+  const visible = (Array.isArray(groups) ? groups : [])
+    .filter(group => group && group.enabled !== false)
+  return visible.map((group, gi) => {
     const item = group || {}
     const preset = GROUPS.find(g => g.label === String(item.name || '').trim().toUpperCase())
     const key = String(item.id || `group_${gi}`)
-    const tools = (Array.isArray(item.tools) ? item.tools : []).map((raw, ti) => {
-      const tool = raw || {}
-      const local = findLocalTool(tool)
-      const toolKey = local ? local.key : String(tool.id || `tool_${gi}_${ti}`)
-      return {
-        key: toolKey,
-        name: String(tool.name || (local && local.name) || '未命名工具'),
-        desc: local ? local.desc : String(tool.desc || ''),
-        icon: local ? local.icon : String(tool.icon || '◆'),
-        tag: local ? local.tag : String(tool.badge || ''),
-        path: local ? local.path : safeRoute(tool.route),
-        preview: previewMap[toolKey] || ''
-      }
-    })
+    const tools = (Array.isArray(item.tools) ? item.tools : [])
+      .filter(raw => raw && raw.enabled !== false)
+      .map((raw, ti) => {
+        const tool = raw || {}
+        const local = findLocalTool(tool)
+        const toolKey = local ? local.key : String(tool.id || `tool_${gi}_${ti}`)
+        return {
+          key: toolKey,
+          name: String(tool.name || (local && local.name) || '未命名工具'),
+          desc: local ? local.desc : String(tool.desc || ''),
+          icon: local ? local.icon : String(tool.icon || '◆'),
+          tag: local ? local.tag : String(tool.badge || ''),
+          path: local ? local.path : safeRoute(tool.route),
+          preview: previewMap[toolKey] || ''
+        }
+      })
     return {
       key,
       label: String(item.name || (preset && preset.label) || ''),
@@ -204,7 +267,7 @@ Page({
     try {
       const cached = wx.getStorageSync(TOOLS_SYNC_KEY)
       if (cached && Array.isArray(cached.groups)) {
-        this.applySections(cached.groups, cached.title, '')
+        this.applySections(cached.groups, cached.title, '', cached.allGroups)
       }
     } catch (err) {
       console.warn('[tools] 配置缓存读取失败', err)
@@ -214,6 +277,7 @@ Page({
     this.refreshFinancePreview()
     this.refreshEnglishPreview()
     this.refreshExperiencePreview()
+    this.refreshWordsPreview()
     // 取到站点最新节假日数据后，用真实数据刷新预览
     holidayLoader.load().then(({ index }) => this.refreshPreview(index))
   },
@@ -226,6 +290,7 @@ Page({
     this.refreshFinancePreview()
     this.refreshEnglishPreview()
     this.refreshExperiencePreview()
+    this.refreshWordsPreview()
   },
 
   // 前三个工具的预览完全由本机 JS 计算，不请求任何网页
@@ -264,19 +329,29 @@ Page({
     this.setPreview('ruler', rulerText)
   },
 
-  // 显示 / 隐藏完全由站点接口控制（文档 4.12 / 6.5）；接口只返回可见项
+  // 显示 / 隐藏完全由站点接口控制（文档 4.12 / 6.5）：visibleOnly 决定渲染，
+  // ?all=1 的全量配置只用来判断后台是否已收录某个分组 / 工具，避免把隐藏项补回来
   syncTools() {
-    return api.getMiniProgramTools()
-      .then(res => {
+    return Promise.all([
+      api.getMiniProgramTools(),
+      api.getMiniProgramToolsAll().catch(() => null)
+    ])
+      .then(results => {
+        const res = results[0]
+        const allRes = results[1]
         if (!res || res.ok === false || !Array.isArray(res.groups)) {
           throw new Error('工具配置格式不正确')
         }
+        // 必须确认拿到的是含隐藏项的全量配置，否则宁可不补充本地分组
+        const allGroups = allRes && allRes.visibleOnly === false && Array.isArray(allRes.groups)
+          ? allRes.groups
+          : null
         try {
-          wx.setStorageSync(TOOLS_SYNC_KEY, { groups: res.groups, title: res.title })
+          wx.setStorageSync(TOOLS_SYNC_KEY, { groups: res.groups, allGroups, title: res.title })
         } catch (err) {
           console.warn('[tools] 配置缓存写入失败', err)
         }
-        this.applySections(res.groups, res.title, '')
+        this.applySections(res.groups, res.title, '', allGroups)
       })
       .catch(err => {
         // 断网时用上次成功的配置；从未成功过则保留随包的默认列表
@@ -289,15 +364,19 @@ Page({
         }
         const hint = '离线配置 · 点击分类展开 ▾'
         if (cached && Array.isArray(cached.groups)) {
-          this.applySections(cached.groups, cached.title, hint)
+          this.applySections(cached.groups, cached.title, hint, cached.allGroups)
         } else {
           this.setData({ toolsHint: hint })
         }
       })
   },
 
-  applySections(groups, title, hint) {
-    const sections = normalizeSections(groups, this.data.sections)
+  applySections(groups, title, hint, allGroups) {
+    const sections = mergeLocalGroups(
+      normalizeSections(groups, this.data.sections),
+      this.data.sections,
+      allGroups
+    )
     const toolTitle = String(title || '').trim().slice(0, 24) || 'TOOL LIST'
     this.setData({ sections, toolTitle, toolsHint: hint || '' })
   },
@@ -394,6 +473,11 @@ Page({
       .catch(() => {
         if (!cached.total) this.setPreview('experience', '经验沉淀 · 联网后可浏览全部经验')
       })
+  },
+
+  // 背单词预览：词库与成绩都在本机，直接读统计，不发起请求
+  refreshWordsPreview() {
+    this.setPreview('words', ieltsGame.previewText())
   },
 
   // 点击分类标题展开 / 收起该组工具；各组独立，默认全部收起

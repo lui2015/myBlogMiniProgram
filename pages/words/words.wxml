@@ -1,0 +1,93 @@
+<view class="page">
+  <view class="hero">
+    <view class="hero-kicker">ENJOYMENT · 05</view>
+    <view class="hero-title">背单词</view>
+    <view class="hero-sub">// 随机抽雅思高频词 · 四选一猜释义</view>
+  </view>
+
+  <view class="stat-bar">
+    <text>词库 {{totalWords}} 词</text>
+    <text>最佳 {{best}}/{{roundSize}}</text>
+    <text>已玩 {{played}} 轮</text>
+  </view>
+
+  <block wx:if="{{stage === 'playing'}}">
+    <view class="progress-row">
+      <text>第 {{progressText}} 题</text>
+      <text>得分 {{score}} · 连击 {{streak}}</text>
+    </view>
+    <view class="progress-track">
+      <view class="progress-fill" style="width:{{progress}}%"></view>
+    </view>
+
+    <view class="word-card">
+      <text class="word-pos">{{question.pos}}</text>
+      <text class="word-text">{{question.word}}</text>
+      <text class="word-phonetic">{{question.phonetic}}</text>
+      <view class="word-copy" bindtap="copyWord">复制单词</view>
+    </view>
+
+    <view class="section-head">
+      <text class="section-en">CHOOSE THE MEANING</text>
+      <text class="section-cn">选出正确的中文释义</text>
+    </view>
+
+    <view class="options">
+      <view
+        wx:for="{{question.options}}"
+        wx:for-item="opt"
+        wx:for-index="oi"
+        wx:key="key"
+        class="option {{optionStates[oi]}}"
+        data-index="{{oi}}"
+        bindtap="pickOption">
+        <text class="option-key">{{opt.key}}</text>
+        <text class="option-text">{{opt.text}}</text>
+      </view>
+    </view>
+
+    <view wx:if="{{answered}}" class="feedback {{lastCorrect ? 'ok' : 'no'}}">
+      <text class="feedback-title">{{feedbackTitle}}</text>
+      <text class="feedback-word">{{question.word}} · {{question.meaning}}</text>
+      <text class="feedback-example">{{question.example}}</text>
+      <view class="next-btn" bindtap="next">{{nextText}} →</view>
+    </view>
+  </block>
+
+  <block wx:else>
+    <view class="result-card">
+      <view class="result-eyebrow">ROUND COMPLETE</view>
+      <view class="result-score">{{score}}<text class="result-total">/{{round.length}}</text></view>
+      <text class="result-label">本轮答对</text>
+      <text wx:if="{{newRecord}}" class="result-record">✦ 刷新最佳成绩</text>
+      <view class="result-grid">
+        <view class="result-cell">
+          <text class="cell-num">{{accuracy}}%</text>
+          <text class="cell-label">正确率</text>
+        </view>
+        <view class="result-cell">
+          <text class="cell-num">{{bestStreak}}</text>
+          <text class="cell-label">最高连击</text>
+        </view>
+        <view class="result-cell">
+          <text class="cell-num">{{best}}</text>
+          <text class="cell-label">历史最佳</text>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{wrongWords.length}}" class="wrong-card">
+      <view class="wrong-title">本轮错词 · {{wrongWords.length}}</view>
+      <view class="wrong-list">
+        <text class="wrong-chip" wx:for="{{wrongWords}}" wx:for-item="w" wx:key="*this">{{w}}</text>
+      </view>
+    </view>
+
+    <view class="result-actions">
+      <view class="primary-btn" bindtap="restart">再来一轮</view>
+      <view class="ghost-btn" bindtap="backToTools">返回工具</view>
+    </view>
+  </block>
+
+  <view class="foot-note">词库为随包雅思 / 学术英语高频词，随机抽题全程离线；成绩、最佳分与错词只存本机，不上传。</view>
+</view>
