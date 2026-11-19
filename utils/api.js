@@ -89,6 +89,12 @@ function getIndex() {
   return request('/api/open')
 }
 
+// 小程序工具配置：只返回后台设为显示的分组与工具（文档 4.12 / 6.5）
+// 响应 no-store，仍带时间戳避免任何客户端 / 代理缓存导致后台开关不生效
+function getMiniProgramTools() {
+  return request(`/api/miniprogram/tools?_t=${Date.now()}`)
+}
+
 // 站点工作日计算器的节假日数据（2024-2028，含调休补班）
 function getHolidays() {
   return request('/workday/holidays.json')
@@ -104,5 +110,6 @@ module.exports = {
   getHero,
   getAbout,
   getIndex,
+  getMiniProgramTools,
   getHolidays
 }

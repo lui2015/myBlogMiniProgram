@@ -9,9 +9,14 @@
 
   <view class="section-head">
     <text class="sec-icon">◈</text>
-    <text class="sec-title">TOOL LIST · {{sections.length}} GROUPS</text>
+    <text class="sec-title">{{toolTitle}} · {{sections.length}} GROUPS</text>
     <view class="sec-line"></view>
-    <text class="sec-hint">点击分类展开 ▾</text>
+    <text class="sec-hint">{{toolsHint || '点击分类展开 ▾'}}</text>
+  </view>
+
+  <view wx:if="{{!sections.length}}" class="group-empty">
+    <text class="group-empty-icon">✦</text>
+    <text class="group-empty-text">后台暂未开放任何工具，敬请期待</text>
   </view>
 
   <view class="group {{section.open ? 'open' : ''}} tone-{{section.tone}}" wx:for="{{sections}}" wx:for-item="section" wx:for-index="gi" wx:key="key">

@@ -69,19 +69,6 @@
       </view>
     </scroll-view>
 
-    <!-- 文章内部分类，仅在文章类型下显示 -->
-    <scroll-view wx:if="{{!searching && currentType === 'article'}}" class="cat-scroll sub-cat" scroll-x enable-flex show-scrollbar="{{false}}">
-      <view class="cat-list">
-        <text
-          class="cat-item {{currentCategory === item ? 'active' : ''}}"
-          wx:for="{{categories}}"
-          wx:key="*this"
-          bindtap="onCategoryTap"
-          data-category="{{item}}"
-        >{{item}}</text>
-      </view>
-    </scroll-view>
-
     <view class="result-count">{{countText}}</view>
 
     <!-- 全站搜索：按作品类型分组 -->
@@ -106,7 +93,7 @@
           </view>
           <view class="group-list">
             <view
-              class="result-item"
+              class="result-item {{row.poem ? 'is-poem' : ''}} {{row.quote ? 'is-quote' : ''}}"
               wx:for="{{item.items}}"
               wx:for-item="row"
               wx:key="id"
@@ -116,6 +103,9 @@
               <view class="result-body">
                 <text class="result-title">{{row.title}}</text>
                 <text wx:if="{{row.subtitle}}" class="result-sub">{{row.subtitle}}</text>
+                <view wx:if="{{row.lines && row.lines.length}}" class="result-poem">
+                  <text class="result-poem-line" wx:for="{{row.lines}}" wx:for-item="line" wx:key="*this">{{line}}</text>
+                </view>
               </view>
               <text class="result-arrow">→</text>
             </view>
@@ -168,7 +158,7 @@
         </view>
         <view wx:else class="type-list">
           <view
-            class="result-item"
+            class="result-item {{item.poem ? 'is-poem' : ''}} {{item.quote ? 'is-quote' : ''}}"
             wx:for="{{typeRows}}"
             wx:key="id"
             bindtap="onResultTap"
@@ -189,6 +179,9 @@
             <view class="result-body">
               <text class="result-title">{{item.title}}</text>
               <text wx:if="{{item.subtitle}}" class="result-sub">{{item.subtitle}}</text>
+              <view wx:if="{{item.lines && item.lines.length}}" class="result-poem">
+                <text class="result-poem-line" wx:for="{{item.lines}}" wx:for-item="line" wx:key="*this">{{line}}</text>
+              </view>
             </view>
             <text class="result-arrow">→</text>
           </view>

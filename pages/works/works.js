@@ -65,16 +65,23 @@ function rowFor(key, item, index) {
     }
   }
   if (key === 'poem') {
+    const lines = String(item.content || '')
+      .split('\n')
+      .map(line => line.trim())
+      .filter(Boolean)
     return {
       id, title: text(item.title) || '无题',
       subtitle: joinParts([item.dynasty ? `[${item.dynasty}]` : '', item.author, item.date]),
+      lines,
+      poem: true,
       path: ''
     }
   }
   const line = text(item.text)
   return {
-    id, title: line.length > 42 ? `${line.slice(0, 42)}…` : (line || '未命名思考'),
+    id, title: line || '未命名思考',
     subtitle: text(item.author),
+    quote: true,
     path: ''
   }
 }
@@ -83,8 +90,6 @@ Page({
   data: {
     guides: categories.withCounts({}),
     works: [],
-    categories: [],
-    currentCategory: '全部',
     types: TYPE_TABS,
     currentType: 'article',
     currentTypeName: '文章',
@@ -171,13 +176,7 @@ Page({
     return api.getList('works')
       .then(res => {
         this.allWorks = resolveFields(res.items, ['cover'])
-        const cats = ['全部']
-        this.allWorks.forEach(work => {
-          if (work.category && cats.indexOf(work.category) === -1) {
-            cats.push(work.category)
-          }
-        })
-        this.setData({ categories: cats, total: res.total, loading: false })
+        this.setData({ total: res.total, loading: false })
         this.renderCurrent()
       })
       .catch(err => {
@@ -188,11 +187,9 @@ Page({
       })
   },
 
-  applyFilter() {
-    const { currentCategory } = this.data
-    const works = currentCategory === '全部'
-      ? this.allWorks
-      : this.allWorks.filter(work => work.category === currentCategory)
+  // 文章类型直接展示全量文章，不再按文章内部分类筛选
+  showAllWorks() {
+    const works = this.allWorks
     this.setData({ works, countText: `共 ${works.length} 篇文章` })
   },
 
@@ -200,7 +197,7 @@ Page({
   renderCurrent() {
     if (this.data.currentType === 'article') {
       this.setData({ typeLoading: false, typeError: '', typeRows: [] })
-      this.applyFilter()
+      this.showAllWorks()
       return Promise.resolve()
     }
     return this.loadTypeRows(this.data.currentType)
@@ -214,7 +211,6 @@ Page({
       currentType: key,
       currentTypeName: item.name,
       currentTypePath: item.path,
-      currentCategory: '全部',
       sectionTitle: `LATEST ${item.en}`,
       typeRows: [],
       typeError: ''
@@ -271,11 +267,6 @@ Page({
     const index = Number(e.currentTarget.dataset.index)
     if (!isFinite(index) || index < 0) return
     this.setData({ [`typeRows[${index}].thumb`]: '' })
-  },
-
-  onCategoryTap(e) {
-    this.setData({ currentCategory: e.currentTarget.dataset.category })
-    this.applyFilter()
   },
 
   onSearchInput(e) {

@@ -6,9 +6,12 @@ const thinkingApi = require('../../utils/thinkingApi')
 const experienceApi = require('../../utils/experienceApi')
 const finance = require('../../utils/xiaobaiApi')
 const englishApi = require('../../utils/englishApi')
-const config = require('../../utils/config')
+const api = require('../../utils/api')
 
 const STORAGE_KEY = 'countdown_events_v1'
+// 上次成功同步的工具配置，接口不可用时离线兜底
+const TOOLS_SYNC_KEY = 'mini_program_tools_v1'
+const TONES = ['cyan', 'pink', 'purple', 'amber', 'green', 'slate']
 
 // 工具分类：WORK / LIFE / THOUGHT / STUDY / ENJOYMENT / OTHER，tone 对应 WXSS 里的 .tone-* 配色
 const GROUPS = [
@@ -110,6 +113,76 @@ function buildSections(tools) {
   })
 }
 
+// 后台工具 id → 本地能力 key；后台改了工具名称时仍能识别，否则按名称匹配
+const TOOL_IDS = {
+  tool_workdays: 'workday',
+  tool_countdown: 'countdown',
+  tool_ruler: 'ruler',
+  tool_mwnij7g3rhs19: 'thinking',
+  tool_mwnijtrbig9av: 'experience',
+  tool_mwnildjn1v14v: 'xiaobai',
+  tool_mwnilsjhrou6x: 'english'
+}
+
+function findLocalTool(tool) {
+  const id = String((tool && tool.id) || '')
+  const name = String((tool && tool.name) || '').trim()
+  const byId = TOOL_IDS[id] && TOOLS.find(item => item.key === TOOL_IDS[id])
+  return byId || TOOLS.find(item => item.name === name)
+}
+
+// 只放行站内页面路径，后台新增的工具不会带来外链跳转
+function safeRoute(route) {
+  const value = String(route || '')
+  return /^\/pages\/[A-Za-z0-9_/-]+$/.test(value) ? value : ''
+}
+
+// 接口只给出「显示哪些分组 / 工具」与名称，页面路径与预览能力由本地注册表提供。
+// 服务端已过滤隐藏项，这里按返回顺序渲染，并保留展开状态与已算好的预览。
+function normalizeSections(groups, prevSections) {
+  const openMap = {}
+  const openLabelMap = {}
+  const previewMap = {}
+  ;(prevSections || []).forEach(section => {
+    openMap[section.key] = !!section.open
+    // 随包默认分组用 work / life 作 key，接口用 group_work 等；按名称再兜一层，避免首次同步时展开状态丢失
+    openLabelMap[String(section.label || '').trim().toUpperCase()] = !!section.open
+    ;(section.tools || []).forEach(tool => {
+      if (tool.preview) previewMap[tool.key] = tool.preview
+    })
+  })
+
+  return (Array.isArray(groups) ? groups : []).map((group, gi) => {
+    const item = group || {}
+    const preset = GROUPS.find(g => g.label === String(item.name || '').trim().toUpperCase())
+    const key = String(item.id || `group_${gi}`)
+    const tools = (Array.isArray(item.tools) ? item.tools : []).map((raw, ti) => {
+      const tool = raw || {}
+      const local = findLocalTool(tool)
+      const toolKey = local ? local.key : String(tool.id || `tool_${gi}_${ti}`)
+      return {
+        key: toolKey,
+        name: String(tool.name || (local && local.name) || '未命名工具'),
+        desc: local ? local.desc : String(tool.desc || ''),
+        icon: local ? local.icon : String(tool.icon || '◆'),
+        tag: local ? local.tag : String(tool.badge || ''),
+        path: local ? local.path : safeRoute(tool.route),
+        preview: previewMap[toolKey] || ''
+      }
+    })
+    return {
+      key,
+      label: String(item.name || (preset && preset.label) || ''),
+      name: String(item.subtitle || (preset && preset.name) || ''),
+      tone: preset ? preset.tone : TONES[gi % TONES.length],
+      no: gi + 1 < 10 ? `0${gi + 1}` : String(gi + 1),
+      open: !!openMap[key] || !!openLabelMap[String(item.name || '').trim().toUpperCase()],
+      countText: tools.length ? `${tools.length} 项` : '敬请期待',
+      tools
+    }
+  })
+}
+
 function readEvents() {
   try {
     const list = wx.getStorageSync(STORAGE_KEY)
@@ -121,13 +194,20 @@ function readEvents() {
 
 Page({
   data: {
-    sections: buildSections(TOOLS)
+    sections: buildSections(TOOLS),
+    toolTitle: 'TOOL LIST',
+    toolsHint: ''
   },
 
   onLoad() {
-    if (!config.showXiaoBaiTool) {
-      // 只隐藏财经工具，STUDY 里的「每日英语」仍保留
-      this.setData({ sections: buildSections(TOOLS.filter(item => item.key !== 'xiaobai')) })
+    // 冷启动先用上次同步的配置渲染，避免闪一下随包的默认分组
+    try {
+      const cached = wx.getStorageSync(TOOLS_SYNC_KEY)
+      if (cached && Array.isArray(cached.groups)) {
+        this.applySections(cached.groups, cached.title, '')
+      }
+    } catch (err) {
+      console.warn('[tools] 配置缓存读取失败', err)
     }
     this.refreshPreview()
     this.refreshThinkingPreview()
@@ -139,6 +219,8 @@ Page({
   },
 
   onShow() {
+    // 每次进入都重新拉配置，后台隐藏分组 / 工具后无需发版即时生效
+    this.syncTools()
     this.refreshPreview(this.cachedIndex)
     this.refreshThinkingPreview()
     this.refreshFinancePreview()
@@ -182,6 +264,44 @@ Page({
     this.setPreview('ruler', rulerText)
   },
 
+  // 显示 / 隐藏完全由站点接口控制（文档 4.12 / 6.5）；接口只返回可见项
+  syncTools() {
+    return api.getMiniProgramTools()
+      .then(res => {
+        if (!res || res.ok === false || !Array.isArray(res.groups)) {
+          throw new Error('工具配置格式不正确')
+        }
+        try {
+          wx.setStorageSync(TOOLS_SYNC_KEY, { groups: res.groups, title: res.title })
+        } catch (err) {
+          console.warn('[tools] 配置缓存写入失败', err)
+        }
+        this.applySections(res.groups, res.title, '')
+      })
+      .catch(err => {
+        // 断网时用上次成功的配置；从未成功过则保留随包的默认列表
+        console.warn('[tools] 配置同步失败，使用离线配置', err)
+        let cached = null
+        try {
+          cached = wx.getStorageSync(TOOLS_SYNC_KEY)
+        } catch (e) {
+          cached = null
+        }
+        const hint = '离线配置 · 点击分类展开 ▾'
+        if (cached && Array.isArray(cached.groups)) {
+          this.applySections(cached.groups, cached.title, hint)
+        } else {
+          this.setData({ toolsHint: hint })
+        }
+      })
+  },
+
+  applySections(groups, title, hint) {
+    const sections = normalizeSections(groups, this.data.sections)
+    const toolTitle = String(title || '').trim().slice(0, 24) || 'TOOL LIST'
+    this.setData({ sections, toolTitle, toolsHint: hint || '' })
+  },
+
   // 按 key 在分组里定位，避免插入 / 隐藏卡片后预览索引错位
   findTool(key) {
     const sections = this.data.sections || []
@@ -218,7 +338,8 @@ Page({
 
   // 小白财经预览：缓存立即显示，再静默同步站点最新文章
   refreshFinancePreview() {
-    if (!config.showXiaoBaiTool) return
+    // 后台把「小白学财经」设为隐藏时，不必再拉它的文章预览
+    if (!this.findTool('xiaobai')) return
     const cached = finance.getOfflineArticles()
     const show = articles => {
       const sorted = articles.slice().sort((a, b) => String(b.publishAt).localeCompare(String(a.publishAt)))
@@ -285,7 +406,11 @@ Page({
 
   goTool(e) {
     const path = e.currentTarget.dataset.path
-    if (path) wx.navigateTo({ url: path })
+    if (path) {
+      wx.navigateTo({ url: path })
+    } else {
+      wx.showToast({ title: '该工具暂未开放', icon: 'none' })
+    }
   },
 
   onShareAppMessage() {
