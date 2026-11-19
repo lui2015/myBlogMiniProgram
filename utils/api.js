@@ -10,7 +10,8 @@ function buildQuery(params) {
 }
 
 function request(path, options = {}) {
-  const { method = 'GET', data } = options
+  // dataType 默认 json；站点返回的 HTML 正文需传 'text' 关闭自动 JSON.parse
+  const { method = 'GET', data, dataType = 'json' } = options
   const url = /^https?:\/\//i.test(path) ? path : BASE_URL + path
 
   return new Promise((resolve, reject) => {
@@ -19,6 +20,7 @@ function request(path, options = {}) {
       method,
       data: data || {},
       timeout: 15000,
+      dataType,
       header: { 'Content-Type': 'application/json' },
       success(res) {
         const body = res.data

@@ -3,6 +3,7 @@ const holidayLoader = require('../../utils/holidayLoader')
 const localData = require('../../utils/holidays')
 const rulerStorage = require('../../utils/ruler')
 const thinkingApi = require('../../utils/thinkingApi')
+const experienceApi = require('../../utils/experienceApi')
 const finance = require('../../utils/xiaobaiApi')
 const englishApi = require('../../utils/englishApi')
 const config = require('../../utils/config')
@@ -59,6 +60,16 @@ const TOOLS = [
     tag: '站点同步',
     preview: '',
     path: '/pages/thinking/thinking'
+  },
+  {
+    key: 'experience',
+    group: 'thought',
+    icon: '🗂️',
+    name: '经验沉淀',
+    desc: '站点经验沉淀库：按分类浏览、全文检索，原生排版阅读完整正文与表格。',
+    tag: '站点同步',
+    preview: '',
+    path: '/pages/experience/experience'
   },
   {
     key: 'xiaobai',
@@ -122,6 +133,7 @@ Page({
     this.refreshThinkingPreview()
     this.refreshFinancePreview()
     this.refreshEnglishPreview()
+    this.refreshExperiencePreview()
     // 取到站点最新节假日数据后，用真实数据刷新预览
     holidayLoader.load().then(({ index }) => this.refreshPreview(index))
   },
@@ -131,6 +143,7 @@ Page({
     this.refreshThinkingPreview()
     this.refreshFinancePreview()
     this.refreshEnglishPreview()
+    this.refreshExperiencePreview()
   },
 
   // 前三个工具的预览完全由本机 JS 计算，不请求任何网页
@@ -240,6 +253,25 @@ Page({
       .then(res => { if (res && res.data) show(res.data) })
       .catch(() => {
         if (!cached) this.setPreview('english', '每日一句 + 今日美文 · 联网后可见')
+      })
+  },
+
+  // 经验沉淀预览：先读本机缓存立即显示，再静默同步站点最新列表
+  refreshExperiencePreview() {
+    const cached = experienceApi.getOfflineExperiences()
+    const show = total => {
+      this.setPreview('experience', `共 ${total} 篇经验 · 分类浏览 / 全文检索`)
+    }
+    if (cached.total) show(cached.total)
+    experienceApi.getExperiences()
+      .then(res => {
+        const data = res && res.data
+        if (data && Array.isArray(data.items) && data.items.length) {
+          show(Number(data.total) || data.items.length)
+        }
+      })
+      .catch(() => {
+        if (!cached.total) this.setPreview('experience', '经验沉淀 · 联网后可浏览全部经验')
       })
   },
 

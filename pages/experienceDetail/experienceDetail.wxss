@@ -1,0 +1,205 @@
+.page {
+  min-height: 100vh;
+  padding: 0 32rpx 80rpx;
+}
+
+/* 全屏阅读：隐藏 Hero / 摘要 / 说明，正文浅色报告铺满视口 */
+.page.is-full {
+  padding: 0;
+}
+
+.page.is-full .offline-tip {
+  margin: 0;
+  border-radius: 0;
+}
+
+.full-bar {
+  display: flex;
+  align-items: center;
+  padding: 16rpx 20rpx;
+  background-color: #111827;
+  border-bottom: 1rpx solid rgba(255, 255, 255, 0.08);
+}
+
+.full-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 23rpx;
+  color: #e5e7eb;
+  margin-right: 16rpx;
+}
+
+.full-btn {
+  flex-shrink: 0;
+  padding: 8rpx 18rpx;
+  font-size: 21rpx;
+  color: #00d4ff;
+  background-color: rgba(0, 212, 255, 0.08);
+  border: 1rpx solid rgba(0, 212, 255, 0.4);
+  border-radius: 8rpx;
+}
+
+.full-btn:active {
+  background-color: rgba(0, 212, 255, 0.2);
+}
+
+.offline-tip {
+  margin-top: 24rpx;
+  padding: 16rpx 24rpx;
+  font-size: 22rpx;
+  color: #ffc857;
+  background-color: rgba(255, 200, 87, 0.08);
+  border: 1rpx solid rgba(255, 200, 87, 0.28);
+  border-radius: 10rpx;
+}
+
+.hero {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  margin: 24rpx -32rpx 0;
+  padding: 48rpx 32rpx 40rpx;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 50% 0%, #1a1233 0%, #0a0a14 82%);
+}
+
+.hero-grid {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image:
+    linear-gradient(rgba(168, 85, 247, 0.035) 1rpx, transparent 1rpx),
+    linear-gradient(90deg, rgba(168, 85, 247, 0.035) 1rpx, transparent 1rpx);
+  background-size: 44rpx 44rpx;
+}
+
+.eyebrow {
+  position: relative;
+  font-size: 21rpx;
+  color: #c084fc;
+  letter-spacing: 2rpx;
+  font-family: monospace;
+}
+
+.title {
+  position: relative;
+  margin-top: 20rpx;
+  font-size: 40rpx;
+  font-weight: 700;
+  line-height: 1.45;
+  color: #ffffff;
+}
+
+.meta {
+  position: relative;
+  margin-top: 18rpx;
+  font-size: 21rpx;
+  color: #7a7a96;
+  font-family: monospace;
+}
+
+.hero-line {
+  position: relative;
+  width: 140rpx;
+  height: 2rpx;
+  margin-top: 26rpx;
+  background: linear-gradient(90deg, #a855f7, transparent);
+}
+
+.summary-card {
+  margin-top: 28rpx;
+  padding: 26rpx;
+  background-color: rgba(168, 85, 247, 0.07);
+  border: 1rpx solid rgba(168, 85, 247, 0.24);
+  border-radius: 14rpx;
+}
+
+.summary-label {
+  display: block;
+  margin-bottom: 12rpx;
+  font-size: 22rpx;
+  color: #c084fc;
+  letter-spacing: 2rpx;
+}
+
+.summary-text {
+  display: block;
+  font-size: 24rpx;
+  line-height: 1.8;
+  color: #c9d1e0;
+}
+
+.sec-header {
+  display: flex;
+  align-items: center;
+  margin: 40rpx 0 20rpx;
+}
+
+.sec-icon {
+  font-size: 26rpx;
+  color: #a855f7;
+  margin-right: 12rpx;
+}
+
+.sec-title {
+  font-size: 23rpx;
+  font-weight: bold;
+  color: rgba(255, 255, 255, 0.7);
+  letter-spacing: 3rpx;
+  font-family: monospace;
+}
+
+.sec-line {
+  flex: 1;
+  height: 1rpx;
+  margin-left: 20rpx;
+  background: linear-gradient(90deg, rgba(168, 85, 247, 0.4), transparent);
+}
+
+/* 网页原版报告是浅色主题，容器沿用其背景，避免深色底上白字/浅色卡片失真 */
+.article-body {
+  padding: 20rpx 8rpx;
+  background-color: #f6f7fb;
+  border: 1rpx solid rgba(255, 255, 255, 0.12);
+  border-radius: 14rpx;
+  overflow: hidden;
+}
+
+.page.is-full .article-body {
+  padding: 12rpx 8rpx 80rpx;
+  border: none;
+  border-radius: 0;
+}
+
+.article-html {
+  display: block;
+  font-size: 15px;
+  line-height: 1.75;
+  color: #0f172a;
+  word-break: break-all;
+}
+
+.tip-card {
+  margin-top: 40rpx;
+  padding: 28rpx 26rpx;
+  border-left: 4rpx solid #a855f7;
+  background-color: rgba(168, 85, 247, 0.06);
+  border-radius: 0 12rpx 12rpx 0;
+}
+
+.tip-title {
+  display: block;
+  margin-bottom: 14rpx;
+  font-size: 26rpx;
+  font-weight: bold;
+  color: #c084fc;
+}
+
+.tip-text {
+  display: block;
+  font-size: 23rpx;
+  line-height: 1.9;
+  color: #9a9ab0;
+}

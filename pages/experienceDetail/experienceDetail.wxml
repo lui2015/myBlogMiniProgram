@@ -1,0 +1,51 @@
+<view class="page {{fullscreen ? 'is-full' : ''}}">
+
+  <view wx:if="{{loading}}" class="state">
+    <text class="state-text">正在加载经验正文…</text>
+  </view>
+  <view wx:elif="{{errorMsg}}" class="state">
+    <text class="state-text">{{errorMsg}}</text>
+    <view class="state-retry" bindtap="retry">重新加载</view>
+  </view>
+
+  <block wx:else>
+    <view wx:if="{{fullscreen}}" class="full-bar">
+      <text class="full-title">{{item.title}}</text>
+      <view class="full-btn" bindtap="toggleFullscreen">✕ 退出</view>
+    </view>
+
+    <view wx:if="{{stale}}" class="offline-tip">网络不可用 · 显示本机缓存内容</view>
+
+    <block wx:if="{{!fullscreen}}">
+      <view class="hero">
+        <view class="hero-grid"></view>
+        <text class="eyebrow">EXPERIENCE / {{item.categoryName}}</text>
+        <text class="title">{{item.title}}</text>
+        <text class="meta">{{item.date}} · {{item.sizeText}}</text>
+        <view class="hero-line"></view>
+      </view>
+
+      <view wx:if="{{item.summary}}" class="summary-card">
+        <text class="summary-label">◈ 内容提要</text>
+        <text class="summary-text">{{item.summary}}</text>
+      </view>
+    </block>
+
+    <view wx:if="{{!fullscreen}}" class="sec-header">
+      <text class="sec-icon">◈</text>
+      <text class="sec-title">FULL ARTICLE</text>
+      <view class="sec-line"></view>
+      <view class="full-btn" bindtap="toggleFullscreen">⛶ 全屏</view>
+    </view>
+
+    <view class="article-body">
+      <rich-text class="article-html" nodes="{{html}}"></rich-text>
+    </view>
+
+    <view wx:if="{{!fullscreen}}" class="tip-card">
+      <text class="tip-title">◈ 阅读说明</text>
+      <text class="tip-text">正文来自站点返回的完整 HTML 报告（含网页原版内联 CSS）：展开 CSS 变量、只保留纯单 class 样式，标题 / 正文 / 列表 / 表格补标签级排版，并重排为移动端单栏后由原生 rich-text 渲染，保留原版配色、卡片与表格；点「全屏」可隐藏所有面板铺满阅读，横放手机会自动适配宽屏。桌面多栏、侧栏目录、脚本与交互组件不加载，文内链接仅保留文字、不跳转站外。正文仅在本机缓存，下拉刷新可同步最新内容。</text>
+    </view>
+  </block>
+
+</view>
