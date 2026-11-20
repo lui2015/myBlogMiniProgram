@@ -22,4 +22,11 @@
     <view wx:else class="state"><text class="state-text">该相册暂无照片</text></view>
   </view>
 
+  <button class="share-entry" open-type="share" hover-class="share-entry-hover">
+    <text class="share-icon">↗</text>
+    <text class="share-main">转发给朋友</text>
+    <text class="share-sub">SHARE</text>
+    <text class="share-arrow">→</text>
+  </button>
+
 </view>

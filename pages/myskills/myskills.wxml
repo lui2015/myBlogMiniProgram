@@ -46,4 +46,11 @@
     <view class="list-hint">点击条目可复制技能地址，小程序不跳转站外网页</view>
   </view>
 
+  <button class="share-entry" open-type="share" hover-class="share-entry-hover">
+    <text class="share-icon">↗</text>
+    <text class="share-main">转发给朋友</text>
+    <text class="share-sub">SHARE</text>
+    <text class="share-arrow">→</text>
+  </button>
+
 </view>

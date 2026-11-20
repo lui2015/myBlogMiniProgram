@@ -147,7 +147,7 @@
 ## 目录结构
 
 ```
-├── app.js / app.json / app.wxss      # 全局配置与公共样式
+├── app.js / app.json / app.wxss      # 全局配置、转发菜单开启与公共样式（含分享入口）
 ├── project.config.json               # 项目配置（AppID）
 ├── sitemap.json
 ├── images/                           # TabBar 图标
@@ -190,6 +190,12 @@
 - 部分图片字段是站内相对路径（`/uploads/...`、`/images/...`，如 `about.avatar`），`utils/util.js` 会自动补全为完整 HTTPS 地址。
 - `about.avatar` / `hero.avatarUrl` 等图片若加载失败，会回退显示 `avatarText` 文字头像；`GET /api/open/about` 失败时「关于我」显示上次成功同步的内容（或错误重试页），不会回退到写死的旧数据。其它页面在 `onLoad` 拉取数据，后台修改后下拉刷新即可同步；首页相框还会在 `onShow`（Tab 切回）静默重新拉取。
 - 小白财经站内公开接口不支持关键词搜索（未知 query 参数会被忽略），因此列表页搜索基于接口拉回的全量精简列表在本机过滤；切换到文档 v1 接口后仍使用同一套本地筛选逻辑。原 HTML 里占正文体积约 95% 的内联 SVG 是两张角色头像的 base64 图片，`rich-text` 无法直接渲染，现由详情页分段交给原生 `image` 组件显示；其余矢量插画仍按白名单跳过，文字内容与配色、气泡版式保留。
+
+## 转发给朋友
+
+全站 22 个页面都实现了 `onShareAppMessage`，`app.js` 启动时显式调用 `wx.showShareMenu({ menus: ['shareAppMessage'] })`，右上角胶囊菜单的「转发给朋友」始终可用。每个页面底部另有统一的「转发给朋友」按钮（`<button open-type="share">`，样式在 `app.wxss`），点击直接拉起好友选择，不必依赖右上角菜单；尺子全屏测量时隐藏该按钮，避免遮挡刻度。
+
+分享标题按页面定制，文章 / 相册 / 经验沉淀 / 小白财经 / 思维模型等详情页会在 `path` 里带上 `id` 或 `slug`，朋友点开直达同一条内容；分享卡片沿用微信默认的页面截图，不加载站外图片、不携带用户信息。
 
 ## 使用
 

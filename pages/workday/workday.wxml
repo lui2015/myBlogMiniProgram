@@ -141,4 +141,11 @@
   </view>
   <text class="foot-hint">数据来源：国务院办公厅《节假日放假安排通知》。点击某一行可回填到计算器。</text>
 
+  <button class="share-entry" open-type="share" hover-class="share-entry-hover">
+    <text class="share-icon">↗</text>
+    <text class="share-main">转发给朋友</text>
+    <text class="share-sub">SHARE</text>
+    <text class="share-arrow">→</text>
+  </button>
+
 </view>
