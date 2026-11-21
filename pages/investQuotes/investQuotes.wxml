@@ -1,0 +1,124 @@
+<view class="page">
+
+  <view class="hero">
+    <text class="hero-kicker">STUDY · 03 / INVESTMENT QUOTES</text>
+    <text class="hero-title">投资名言</text>
+    <text class="hero-sub">// 让大师思想照亮投资道路</text>
+  </view>
+
+  <view wx:if="{{offline}}" class="offline-tip">{{updatedText}}</view>
+
+  <!-- 每日一句 -->
+  <view wx:if="{{daily}}" class="daily-card">
+    <view class="daily-top">
+      <text class="daily-badge">今日一句</text>
+      <text class="daily-count">{{totalCount}} 条箴言</text>
+    </view>
+    <text class="daily-mark">“</text>
+    <text class="daily-cn">{{daily.cn}}</text>
+    <view wx:if="{{daily.en}}" class="daily-en"><text>{{daily.en}}</text></view>
+    <view class="daily-meta">
+      <text class="daily-master">— {{daily.master}}</text>
+      <text wx:if="{{daily.source}}" class="daily-source">{{daily.source}}</text>
+    </view>
+    <view wx:if="{{daily.tags.length}}" class="daily-tags">
+      <text class="chip chip-static" wx:for="{{daily.tags}}" wx:for-item="tag" wx:key="*this">#{{tag}}</text>
+    </view>
+    <view class="daily-actions">
+      <view class="act" bindtap="onDailyRefresh"><text>⟳ 换一句</text></view>
+      <view class="act" bindtap="onDailyCopy"><text>⧉ 复制</text></view>
+      <view class="act {{dailyFav ? 'act-on' : ''}}" bindtap="onDailyFav"><text>{{dailyFav ? '★ 已收藏' : '☆ 收藏'}}</text></view>
+    </view>
+  </view>
+
+  <!-- 视图 -->
+  <view class="view-tabs">
+    <view class="view-tab {{view === 'all' ? 'active' : ''}}" bindtap="onViewTap" data-view="all"><text>全部名言</text></view>
+    <view class="view-tab {{view === 'fav' ? 'active' : ''}}" bindtap="onViewTap" data-view="fav"><text>我的收藏 {{favCount}}</text></view>
+  </view>
+
+  <view class="search-bar">
+    <text class="search-icon">⌕</text>
+    <input
+      class="search-input"
+      placeholder="搜索名言 / 大师 / 标签"
+      placeholder-class="search-ph"
+      value="{{keyword}}"
+      bindinput="onSearchInput"
+      confirm-type="search"
+    ></input>
+    <text wx:if="{{keyword}}" class="search-clear" bindtap="clearSearch">✕</text>
+  </view>
+
+  <view wx:if="{{masters.length}}" class="filter-block">
+    <text class="filter-label">大师</text>
+    <scroll-view class="chip-scroll" scroll-x enable-flex show-scrollbar="{{false}}">
+      <view class="chip-row">
+        <view class="chip {{master === '' ? 'chip-on' : ''}}" bindtap="onMasterTap" data-master=""><text>全部</text></view>
+        <view class="chip {{master === item.name ? 'chip-on' : ''}}" wx:for="{{masters}}" wx:key="name" bindtap="onMasterTap" data-master="{{item.name}}"><text>{{item.name}} {{item.count}}</text></view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <view wx:if="{{tags.length}}" class="filter-block">
+    <text class="filter-label">主题</text>
+    <scroll-view class="chip-scroll" scroll-x enable-flex show-scrollbar="{{false}}">
+      <view class="chip-row">
+        <view class="chip {{tag === '' ? 'chip-on' : ''}}" bindtap="onTagTap" data-tag=""><text>全部</text></view>
+        <view class="chip {{tag === item.name ? 'chip-on' : ''}}" wx:for="{{tags}}" wx:key="name" bindtap="onTagTap" data-tag="{{item.name}}"><text>#{{item.name}}</text></view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <view class="result-count">{{countText}}<text wx:if="{{updatedText && !offline}}"> · {{updatedText}}</text></view>
+
+  <view wx:if="{{loading}}" class="state">
+    <text class="state-text">正在同步名言库…</text>
+    <text class="state-hint">首次同步约 4 MB 数据，请稍候；之后 24 小时内直接从本机读取</text>
+  </view>
+
+  <view wx:elif="{{error}}" class="state">
+    <text class="state-text">{{error}}</text>
+    <view class="state-retry" bindtap="onRetry">重新加载</view>
+  </view>
+
+  <view wx:elif="{{!list.length}}" class="state">
+    <text class="state-text">{{view === 'fav' ? '还没有收藏名言' : '没有找到匹配的名言'}}</text>
+  </view>
+
+  <view wx:else class="quote-list">
+    <view class="quote-card" wx:for="{{list}}" wx:key="id" bindtap="onCardTap" data-id="{{item.id}}">
+      <view class="quote-head">
+        <text class="quote-no">{{index + 1}}</text>
+        <text class="quote-master">{{item.master}}</text>
+        <text class="quote-fav {{item.fav ? 'on' : ''}}" catchtap="onFavTap" data-id="{{item.id}}">{{item.fav ? '★' : '☆'}}</text>
+      </view>
+      <text class="quote-cn">{{item.cn}}</text>
+
+      <view wx:if="{{expandedId === item.id}}" class="quote-extra">
+        <text wx:if="{{item.en}}" class="quote-en">{{item.en}}</text>
+        <text wx:if="{{item.source}}" class="quote-source">出处 · {{item.source}}<text wx:if="{{item.year}}">（{{item.year}}）</text></text>
+        <view wx:if="{{item.tags.length}}" class="quote-tags">
+          <text class="chip chip-static" wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this">#{{tag}}</text>
+        </view>
+        <view class="quote-copy" catchtap="onCopyTap" data-id="{{item.id}}"><text>⧉ 复制名言</text></view>
+      </view>
+
+      <view class="quote-foot">
+        <text class="quote-tag-line">{{item.tagText}}</text>
+        <text class="quote-more">{{expandedId === item.id ? '收起 ↑' : '中英对照与出处 ↓'}}</text>
+      </view>
+    </view>
+
+    <view wx:if="{{hasMore}}" class="load-more" bindtap="appendMore"><text>加载更多 ↓</text></view>
+    <view wx:else class="list-end">— 已显示全部 {{total}} 条 —</view>
+  </view>
+
+  <button class="share-entry" open-type="share" hover-class="share-entry-hover">
+    <text class="share-icon">↗</text>
+    <text class="share-main">转发给朋友</text>
+    <text class="share-sub">SHARE</text>
+    <text class="share-arrow">→</text>
+  </button>
+
+</view>

@@ -11,6 +11,7 @@ const ieltsGame = require('../../utils/ieltsGame')
 const salaryCalc = require('../../utils/salary')
 const dining = require('../../utils/dining')
 const pomodoro = require('../../utils/pomodoro')
+const investQuotes = require('../../utils/investmentQuotes')
 
 const STORAGE_KEY = 'countdown_events_v1'
 // 上次成功同步的工具配置，接口不可用时离线兜底
@@ -117,6 +118,16 @@ const TOOLS = [
     tag: '站点同步',
     preview: '',
     path: '/pages/english/english'
+  },
+  {
+    key: 'investQuotes',
+    group: 'study',
+    icon: '💡',
+    name: '投资名言',
+    desc: '4463 条投资大师箴言，按大师与投资主题筛选、每天推荐一句，支持中英对照、出处、本机收藏与复制。',
+    tag: '站点同步',
+    preview: '',
+    path: '/pages/investQuotes/investQuotes'
   },
   {
     key: 'words',
@@ -360,6 +371,7 @@ Page({
     this.refreshSalaryPreview()
     this.refreshDiningPreview()
     this.refreshPomodoroPreview()
+    this.refreshInvestQuotesPreview()
     // 取到站点最新节假日数据后，用真实数据刷新预览
     holidayLoader.load().then(({ index }) => this.refreshPreview(index))
   },
@@ -376,6 +388,7 @@ Page({
     this.refreshSalaryPreview()
     this.refreshDiningPreview()
     this.refreshPomodoroPreview()
+    this.refreshInvestQuotesPreview()
   },
 
   // 前三个工具的预览完全由本机 JS 计算，不请求任何网页
@@ -585,6 +598,11 @@ Page({
   // 番茄时钟预览：时长与今日统计都存在本机，直接读完成数
   refreshPomodoroPreview() {
     this.setPreview('pomodoro', pomodoro.previewText())
+  },
+
+  // 投资名言预览：只读本机缓存，避免工具列表页重复拉取全量名言
+  refreshInvestQuotesPreview() {
+    this.setPreview('investQuotes', investQuotes.previewText())
   },
 
   // 点击分类标题展开 / 收起该组工具；各组独立，默认全部收起

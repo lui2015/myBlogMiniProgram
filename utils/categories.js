@@ -1,10 +1,12 @@
 // 内容分类导览：首页与「作品」Tab 共用同一份配置
 // section 对应开放 API 模块，用于从 /api/open 索引读取条数
+// path 是分类卡片 / 「查看更多」的目标页；tab=true 表示目标页在 TabBar 上，需用 switchTab
 const CATEGORIES = [
   {
     key: 'article', name: '文章', en: 'ARTICLES', icon: '📝',
     desc: '项目管理、研发效能与长文记录', unit: '篇',
-    section: 'works', path: '/pages/works/works', tab: true, tone: 'cyan'
+    // 文章有独立列表页，不再落到作品 Tab 的分类导览
+    section: 'works', path: '/pages/articles/articles', tab: false, tone: 'cyan'
   },
   {
     key: 'album', name: '相册', en: 'ALBUMS', icon: '📷',

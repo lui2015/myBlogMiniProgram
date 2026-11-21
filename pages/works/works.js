@@ -114,14 +114,9 @@ Page({
   onLoad() {
     this.allWorks = []
     this.typeCache = {}
-    this.scrollTop = 0
     this.searchSeq = 0
     this.fetchWorks()
     this.loadGuides()
-  },
-
-  onPageScroll(e) {
-    this.scrollTop = e.scrollTop || 0
   },
 
   onPullDownRefresh() {
@@ -150,25 +145,12 @@ Page({
       })
   },
 
+  // 文章已有独立列表页，分类卡片统一按 path 跳转（TabBar 页用 switchTab）
   onGuideTap(e) {
     const item = categories.byKey(e.currentTarget.dataset.key)
     if (!item) return
-    if (item.tab) return this.scrollToArticles()
-    wx.navigateTo({ url: item.path })
-  },
-
-  // 文章就在本页，点击「文章」卡片切回文章类型并滚动到下方列表
-  scrollToArticles() {
-    if (this.data.currentType !== 'article') {
-      this.onTypeTap({ currentTarget: { dataset: { key: 'article' } } })
-    }
-    wx.createSelectorQuery().in(this).select('.article-section').boundingClientRect(rect => {
-      if (!rect) return
-      wx.pageScrollTo({
-        scrollTop: Math.max(0, rect.top + (this.scrollTop || 0) - 20),
-        duration: 300
-      })
-    }).exec()
+    if (item.tab) wx.switchTab({ url: item.path })
+    else wx.navigateTo({ url: item.path })
   },
 
   fetchWorks() {
@@ -365,8 +347,7 @@ Page({
 
   onGroupMore(e) {
     const key = e.currentTarget.dataset.key
-    // 文章结果就在本页，清空搜索即可回到完整列表
-    if (key === 'article') return this.clearSearch()
+    // 文章组带上同一关键词进入独立文章列表页
     const group = this.data.searchGroups.filter(item => item.key === key)[0]
     if (group && group.morePath) wx.navigateTo({ url: group.morePath })
   },
