@@ -589,7 +589,7 @@
   display: block;
 }
 
-/* 无封面或图片加载失败时的占位 */
+/* 随包默认封面异常时的纯色占位 */
 .work-cover-empty {
   width: 100%;
   height: 100%;

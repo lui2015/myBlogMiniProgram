@@ -87,7 +87,8 @@
   font-size: 27rpx;
   color: rgba(255, 255, 255, 0.78);
   line-height: 1.9;
-  margin-bottom: 22rpx;
+  margin-bottom: 30rpx;
+  word-break: break-word;
 }
 
 .md-bold {

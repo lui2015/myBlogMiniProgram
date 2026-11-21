@@ -1,0 +1,98 @@
+<view class="page">
+  <view class="hero">
+    <view class="hero-kicker">OTHER · 06</view>
+    <view class="hero-title">番茄时钟</view>
+    <view class="hero-sub">// 专注一段时间，认真休息一段时间</view>
+  </view>
+
+  <view class="phase-tabs">
+    <view
+      wx:for="{{phases}}"
+      wx:for-item="p"
+      wx:key="key"
+      class="phase-tab {{phaseKey === p.key ? 'active' : ''}}"
+      data-key="{{p.key}}"
+      bindtap="onPhaseTap">
+      <text class="phase-tab-name">{{p.name}}</text>
+      <text class="phase-tab-en">{{p.short}}</text>
+    </view>
+  </view>
+
+  <view class="timer-card">
+    <view class="ring {{phaseTone}}" style="background: conic-gradient({{ringColor}} {{percent}}%, rgba(255,255,255,0.07) 0)">
+      <view class="ring-inner">
+        <text class="ring-phase">{{phaseShort}}</text>
+        <text class="ring-time">{{remainingText}}</text>
+        <text class="ring-label">{{phaseName}} · 已完成 {{completed}} 个番茄</text>
+      </view>
+    </view>
+
+    <text class="status {{running ? 'live' : ''}}">{{statusText}}</text>
+
+    <view class="bar">
+      <view class="bar-fill" style="width:{{percent}}%"></view>
+    </view>
+    <text class="phase-hint">{{phaseHint}}</text>
+
+    <view class="timer-main">
+      <view class="primary-btn" bindtap="toggle">{{mainText}}</view>
+    </view>
+    <view class="timer-minor">
+      <view class="ghost-btn" bindtap="resetTimer">重置本阶段</view>
+      <view class="ghost-btn" bindtap="skip">跳过</view>
+      <view class="ghost-btn" bindtap="backToTools">返回工具</view>
+    </view>
+  </view>
+
+  <view class="section-head">
+    <text class="section-en">SETTINGS</text>
+    <text class="section-cn">时长设置</text>
+  </view>
+
+  <view class="settings-card">
+    <view class="setting-row" wx:for="{{settingRows}}" wx:for-item="s" wx:key="field">
+      <view class="setting-info">
+        <text class="setting-name">{{s.name}}</text>
+        <text class="setting-hint">{{s.hint}}</text>
+      </view>
+      <view class="stepper">
+        <view class="step" data-field="{{s.field}}" data-delta="-1" bindtap="onSettingStep">−</view>
+        <text class="setting-value">{{s.value}}</text>
+        <view class="step" data-field="{{s.field}}" data-delta="1" bindtap="onSettingStep">＋</view>
+      </view>
+    </view>
+  </view>
+  <text class="setting-note">改动时长会重置当前阶段；设置与统计只存本机。</text>
+
+  <view class="section-head">
+    <text class="section-en">TODAY</text>
+    <text class="section-cn">专注记录</text>
+  </view>
+
+  <view class="stat-grid">
+    <view class="stat-cell">
+      <text class="stat-num">{{stats.todayCount}}</text>
+      <text class="stat-label">今日番茄</text>
+    </view>
+    <view class="stat-cell">
+      <text class="stat-num">{{stats.todayMinutes}}</text>
+      <text class="stat-label">专注分钟</text>
+    </view>
+    <view class="stat-cell">
+      <text class="stat-num">{{stats.streakDays}}</text>
+      <text class="stat-label">连续天数</text>
+    </view>
+    <view class="stat-cell">
+      <text class="stat-num">{{stats.totalCount}}</text>
+      <text class="stat-label">累计番茄</text>
+    </view>
+  </view>
+
+  <view class="foot-note">经典节奏：专注 25 分钟 → 短休 5 分钟 → 每 4 个番茄长休 15 分钟。计时按真实时间计算，切到后台也不会停；阶段结束需要手动开始下一段，不会自动连跑。数据只存本机，不联网、不上传。</view>
+  <button class="share-entry" open-type="share" hover-class="share-entry-hover">
+    <text class="share-icon">↗</text>
+    <text class="share-main">转发给朋友</text>
+    <text class="share-sub">SHARE</text>
+    <text class="share-arrow">→</text>
+  </button>
+</view>

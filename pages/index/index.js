@@ -1,5 +1,5 @@
 const api = require('../../utils/api')
-const { resolveUrl, resolveFields } = require('../../utils/util')
+const { resolveUrl, resolveFields, resolveCoverFields, DEFAULT_COVER } = require('../../utils/util')
 const config = require('../../utils/config')
 const categories = require('../../utils/categories')
 
@@ -207,7 +207,7 @@ Page({
     return api.getList('works')
       .then(res => {
         this.setData({
-          works: resolveFields(res.items.slice(0, 3), ['cover']),
+          works: resolveCoverFields(res.items.slice(0, 3)),
           'counts.article': res.total
         })
       })
@@ -388,8 +388,10 @@ Page({
 
   onWorkCoverError(e) {
     const index = Number(e.currentTarget.dataset.index)
-    if (!Number.isInteger(index) || index < 0 || index >= this.data.works.length) return
-    this.setData({ [`works[${index}].cover`]: '' })
+    const works = this.data.works || []
+    if (!Number.isInteger(index) || index < 0 || index >= works.length) return
+    if (works[index].cover === DEFAULT_COVER) return
+    this.setData({ [`works[${index}].cover`]: DEFAULT_COVER })
   },
 
   // 点击作品卡片进入列表页并自动展开对应详情；「查看全部」不传 id

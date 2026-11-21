@@ -109,7 +109,7 @@
           ></image>
           <view wx:else class="work-cover-empty">
             <text class="work-cover-empty-icon">◈</text>
-            <text class="work-cover-empty-text">NO COVER</text>
+            <text class="work-cover-empty-text">ARTICLE</text>
           </view>
           <view class="work-media-mask"></view>
           <text class="work-index">0{{workIndex + 1}}</text>

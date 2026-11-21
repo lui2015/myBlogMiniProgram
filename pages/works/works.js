@@ -1,5 +1,5 @@
 const api = require('../../utils/api')
-const { resolveFields, resolveUrl } = require('../../utils/util')
+const { resolveUrl, resolveCoverFields, DEFAULT_COVER } = require('../../utils/util')
 const categories = require('../../utils/categories')
 
 const MAX_ROWS = 5
@@ -175,7 +175,7 @@ Page({
     this.setData({ loading: true, error: '' })
     return api.getList('works')
       .then(res => {
-        this.allWorks = resolveFields(res.items, ['cover'])
+        this.allWorks = resolveCoverFields(res.items)
         this.setData({ total: res.total, loading: false })
         this.renderCurrent()
       })
@@ -185,6 +185,15 @@ Page({
           error: err.message || '加载失败，请检查网络与合法域名配置'
         })
       })
+  },
+
+  // 文章封面加载失败时回退到随包默认图，避免空白 / 破图
+  onWorkCoverError(e) {
+    const index = Number(e.currentTarget.dataset.index)
+    const works = this.data.works || []
+    if (!Number.isInteger(index) || index < 0 || index >= works.length) return
+    if (works[index].cover === DEFAULT_COVER) return
+    this.setData({ [`works[${index}].cover`]: DEFAULT_COVER })
   },
 
   // 文章类型直接展示全量文章，不再按文章内部分类筛选

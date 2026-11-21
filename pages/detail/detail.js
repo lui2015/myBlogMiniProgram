@@ -1,5 +1,5 @@
 const api = require('../../utils/api')
-const { resolveUrl } = require('../../utils/util')
+const { resolveCover, DEFAULT_COVER } = require('../../utils/util')
 const markdown = require('../../utils/markdown')
 
 Page({
@@ -26,7 +26,7 @@ Page({
         if (!article) throw new Error('文章不存在')
         this.setData({
           article: Object.assign({}, article, {
-            cover: resolveUrl(article.cover)
+            cover: resolveCover(article.cover)
           }),
           blocks: markdown.parse(article.content),
           loading: false
@@ -44,7 +44,21 @@ Page({
 
   previewCover() {
     const cover = this.data.article && this.data.article.cover
-    if (cover) wx.previewImage({ current: cover, urls: [cover] })
+    if (cover && cover !== DEFAULT_COVER) wx.previewImage({ current: cover, urls: [cover] })
+  },
+
+  onCoverError() {
+    const article = this.data.article
+    if (!article || article.cover === DEFAULT_COVER) return
+    this.setData({ 'article.cover': DEFAULT_COVER })
+  },
+
+  onBlockImageError(e) {
+    const index = Number(e.currentTarget.dataset.index)
+    const blocks = this.data.blocks || []
+    if (!Number.isInteger(index) || index < 0 || index >= blocks.length) return
+    if (blocks[index].src === DEFAULT_COVER) return
+    this.setData({ [`blocks[${index}].src`]: DEFAULT_COVER })
   },
 
   onSpanTap(e) {

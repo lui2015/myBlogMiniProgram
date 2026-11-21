@@ -1,6 +1,9 @@
 // 通用工具：图片地址补全、安全校验
 const BASE_URL = 'https://www.luliming.xyz'
 
+// 随包默认封面：接口未配封面 / 图片加载失败时兜底，离线可用且不依赖 SVG 兼容性
+const DEFAULT_COVER = '/images/article-cover.png'
+
 const SAFE_PROTOCOL = /^https?:\/\//i
 const UNSAFE_PROTOCOL = /^(javascript|data|file|vbscript|about):/i
 
@@ -26,6 +29,17 @@ function resolveFields(list, fields) {
   })
 }
 
+// 文章封面：有效地址补全，缺失或危险协议一律回退到随包默认图
+function resolveCover(url) {
+  return resolveUrl(url) || DEFAULT_COVER
+}
+
+// 批量给文章列表补封面；item 为空时也保证有图
+function resolveCoverFields(list, field = 'cover') {
+  if (!Array.isArray(list)) return []
+  return list.map(item => Object.assign({}, item, { [field]: resolveCover(item && item[field]) }))
+}
+
 function formatDate(date) {
   if (!date) return ''
   return String(date).trim()
@@ -33,7 +47,10 @@ function formatDate(date) {
 
 module.exports = {
   BASE_URL,
+  DEFAULT_COVER,
   resolveUrl,
   resolveFields,
+  resolveCover,
+  resolveCoverFields,
   formatDate
 }

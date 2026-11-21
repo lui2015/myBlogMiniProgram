@@ -10,6 +10,7 @@ const api = require('../../utils/api')
 const ieltsGame = require('../../utils/ieltsGame')
 const salaryCalc = require('../../utils/salary')
 const dining = require('../../utils/dining')
+const pomodoro = require('../../utils/pomodoro')
 
 const STORAGE_KEY = 'countdown_events_v1'
 // 上次成功同步的工具配置，接口不可用时离线兜底
@@ -126,6 +127,16 @@ const TOOLS = [
     tag: '3000 词库',
     preview: '',
     path: '/pages/words/words'
+  },
+  {
+    key: 'pomodoro',
+    group: 'other',
+    icon: '🍅',
+    name: '番茄时钟',
+    desc: '专注 25 分钟 / 短休 5 分钟 / 每 4 个番茄长休 15 分钟，时长可调；按真实时间计时，切后台也不断，含今日番茄数、专注分钟与连续天数。',
+    tag: '本机计时',
+    preview: '',
+    path: '/pages/pomodoro/pomodoro'
   }
 ]
 
@@ -236,8 +247,10 @@ function mergeLocalGroups(sections, prevSections, allGroups) {
     if (!preset) return
     let section = merged.find(item => labelOf(item) === preset.label)
     if (!section) {
-      // 后台建过该分组却没渲染 = 后台隐藏了它，不补
-      if (backendGroupState(preset.label, allGroups) !== 'missing') return
+      // 只有「后台明确隐藏」或「拿不到全量配置」才不补；
+      // 后台建过但未隐藏的分组若因空分组被 visibleOnly 过滤掉，仍按默认展示补建
+      const groupState = backendGroupState(preset.label, allGroups)
+      if (groupState === 'hidden' || groupState === 'unknown') return
       section = {
         key: `local_${preset.key}`,
         label: preset.label,
@@ -346,6 +359,7 @@ Page({
     this.refreshWordsPreview()
     this.refreshSalaryPreview()
     this.refreshDiningPreview()
+    this.refreshPomodoroPreview()
     // 取到站点最新节假日数据后，用真实数据刷新预览
     holidayLoader.load().then(({ index }) => this.refreshPreview(index))
   },
@@ -361,6 +375,7 @@ Page({
     this.refreshWordsPreview()
     this.refreshSalaryPreview()
     this.refreshDiningPreview()
+    this.refreshPomodoroPreview()
   },
 
   // 前三个工具的预览完全由本机 JS 计算，不请求任何网页
@@ -565,6 +580,11 @@ Page({
   // 点菜助手预览：上次的人数与场合都存在本机，直接换算建议菜数
   refreshDiningPreview() {
     this.setPreview('dining', dining.previewText())
+  },
+
+  // 番茄时钟预览：时长与今日统计都存在本机，直接读完成数
+  refreshPomodoroPreview() {
+    this.setPreview('pomodoro', pomodoro.previewText())
   },
 
   // 点击分类标题展开 / 收起该组工具；各组独立，默认全部收起

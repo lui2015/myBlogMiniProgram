@@ -129,7 +129,7 @@
         </view>
         <view wx:else class="list">
           <view class="work-card" wx:for="{{works}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}">
-            <image class="work-cover" src="{{item.cover}}" mode="aspectFill" lazy-load></image>
+            <image class="work-cover" src="{{item.cover}}" mode="aspectFill" lazy-load binderror="onWorkCoverError" data-index="{{index}}"></image>
             <view class="work-body">
               <view class="work-meta">
                 <text class="cy-tag">{{item.category}}</text>

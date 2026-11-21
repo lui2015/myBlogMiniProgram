@@ -9,6 +9,7 @@
     "pages/countdown/countdown",
     "pages/ruler/ruler",
     "pages/dining/dining",
+    "pages/pomodoro/pomodoro",
     "pages/thinking/thinking",
     "pages/thinkingDetail/thinkingDetail",
     "pages/experience/experience",

@@ -31,8 +31,64 @@ function parseInline(text) {
   return spans.map((span, i) => Object.assign({ key: 's' + i }, span))
 }
 
+// ===== 站点当前文章正文：contentFormat 标为 markdown，实际是「每行一段」的纯文本 =====
+// 没有空行、没有 Markdown 块语法，按标准规则会把所有行拼成一大段。
+// 这里单独按行分段，并识别章节标题、给行首引导词加粗；不解析 HTML、不拼接 HTML 字符串。
+const SECTION_LABELS = ('概念|案例|运用|小结|总结|背景|定义|结论|引言|前言|后记|做法|建议|示例|要点').split('|')
+const LEAD_RE = /^(场景\s*\d+|第[一二三四五六七八九十]+|步骤\s*\d+|概念|案例|运用|小结|总结|背景|定义|结论|提示|注意|先说清楚)([：:，,])/
+const BLOCK_MARKERS = /^(?:#{1,6}\s|```|>|\s*[-*+]\s|\s*\d+[.)]\s|!\[|(?:-{3,}|\*{3,}|_{3,})\s*$)/m
+
+function withKeys(spans) {
+  return spans.map((span, i) => Object.assign({}, span, { key: `s${i}` }))
+}
+
+// 标准 Markdown 靠空行分段；只有「有换行、无空行、无块级语法」时才启用纯文本模式
+function isPlainText(source) {
+  if (!/\n/.test(source)) return false
+  if (/\n\s*\n/.test(source)) return false
+  return !BLOCK_MARKERS.test(source)
+}
+
+function detectHeading(text) {
+  // 章节行通常很短、不含句末标点，形如「概念：琐碎定律」「小结：给注意力排个序」
+  if (text.length > 30 || /[。！？!?；;]/.test(text)) return null
+  if (/^[\u4e00-\u9fa5A-Za-z0-9 ]{2,12}[：:].{1,24}$/.test(text)) {
+    return { type: 'heading', level: 3, text }
+  }
+  if (SECTION_LABELS.indexOf(text) >= 0) {
+    return { type: 'heading', level: 3, text }
+  }
+  return null
+}
+
+// 「场景1：」「第一，」「注意，」这类行首引导词加粗，让段落层次一眼可见
+function emphasize(text) {
+  const lead = LEAD_RE.exec(text)
+  if (!lead) return withKeys(parseInline(text))
+  const spans = [{ text: lead[0], bold: true }].concat(parseInline(text.slice(lead[0].length)))
+  return withKeys(spans)
+}
+
+function parsePlainText(source) {
+  const blocks = []
+  let seq = 0
+  source.split('\n').forEach(line => {
+    const text = line.trim()
+    if (!text) return
+    const heading = detectHeading(text)
+    if (heading) {
+      blocks.push(Object.assign({ key: `b${seq++}` }, heading))
+    } else {
+      blocks.push({ key: `b${seq++}`, type: 'paragraph', spans: emphasize(text) })
+    }
+  })
+  return blocks
+}
+
 function parse(markdown) {
-  const lines = String(markdown || '').replace(/\r\n/g, '\n').split('\n')
+  const source = String(markdown || '').replace(/\r\n/g, '\n')
+  if (isPlainText(source)) return parsePlainText(source)
+  const lines = source.split('\n')
   const blocks = []
   let paragraph = []
   let list = null
@@ -144,4 +200,4 @@ function parse(markdown) {
   return blocks
 }
 
-module.exports = { parse, parseInline }
+module.exports = { parse, parseInline, parsePlainText, isPlainText, detectHeading }
