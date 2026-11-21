@@ -8,6 +8,7 @@ const finance = require('../../utils/xiaobaiApi')
 const englishApi = require('../../utils/englishApi')
 const api = require('../../utils/api')
 const ieltsGame = require('../../utils/ieltsGame')
+const salaryCalc = require('../../utils/salary')
 
 const STORAGE_KEY = 'countdown_events_v1'
 // 上次成功同步的工具配置，接口不可用时离线兜底
@@ -34,6 +35,16 @@ const TOOLS = [
     tag: '原生计算',
     preview: '',
     path: '/pages/workday/workday'
+  },
+  {
+    key: 'salary',
+    group: 'work',
+    icon: '💰',
+    name: '薪酬计算器',
+    desc: '输入年薪或月薪，算出每天 / 每时 / 每分 / 每秒薪酬，并以秒为单位实时累计当前收入；支持全年无休与标准工时两种口径。',
+    tag: '本机计算',
+    preview: '',
+    path: '/pages/salary/salary'
   },
   {
     key: 'countdown',
@@ -149,8 +160,9 @@ function safeRoute(route) {
 }
 
 // 默认接口只返回 visibleOnly 的分组，后台隐藏的分组 / 工具不会出现。
-// 用 ?all=1 的全量配置判断「后台是否已经收录过」：收录过（哪怕隐藏或留空）就完全以接口为准，
-// 只有后台从未建过同名分组时才补随包工具；全量配置拿不到时不补充，隐藏优先。
+// 用 ?all=1 的全量配置判断「后台是否已经收录过」：收录过（哪怕隐藏或留空）就完全以接口为准；
+// 后台从未收录过的本地新工具才补到对应分组——分组已渲染就追加，分组没渲染且后台也没建过才新建。
+// 全量配置拿不到时不补充，隐藏优先。
 function mergeLocalGroups(sections, prevSections, allGroups) {
   if (!Array.isArray(allGroups)) return sections
   const backendGroups = {}
@@ -174,22 +186,43 @@ function mergeLocalGroups(sections, prevSections, allGroups) {
       if (tool.preview) previewMap[tool.key] = tool.preview
     })
   })
-  GROUPS.forEach(preset => {
-    const exists = merged.some(section => String(section.label || '').trim().toUpperCase() === preset.label)
-    if (exists || backendGroups[preset.label]) return
-    const list = TOOLS.filter(item => item.group === preset.key && !backendTools[item.name])
-      .map(item => Object.assign({}, item, { preview: previewMap[item.key] || '' }))
-    merged.push({
-      key: `local_${preset.key}`,
-      label: preset.label,
-      name: preset.name,
-      tone: preset.tone,
-      no: '',
-      open: !!(prevByLabel[preset.label] && prevByLabel[preset.label].open),
-      countText: list.length ? `${list.length} 项` : '敬请期待',
-      tools: list
+
+  const renderedKeys = {}
+  const renderedNames = {}
+  const labelOf = section => String(section.label || '').trim().toUpperCase()
+  merged.forEach(section => {
+    ;(section.tools || []).forEach(tool => {
+      renderedKeys[tool.key] = true
+      renderedNames[String(tool.name || '').trim()] = true
     })
   })
+
+  TOOLS.forEach(tool => {
+    if (renderedKeys[tool.key] || renderedNames[tool.name] || backendTools[tool.name]) return
+    const preset = GROUPS.find(group => group.key === tool.group)
+    if (!preset) return
+    let section = merged.find(item => labelOf(item) === preset.label)
+    if (!section) {
+      // 后台建过该分组却没渲染 = 后台隐藏了它，不补
+      if (backendGroups[preset.label]) return
+      section = {
+        key: `local_${preset.key}`,
+        label: preset.label,
+        name: preset.name,
+        tone: preset.tone,
+        no: '',
+        open: !!(prevByLabel[preset.label] && prevByLabel[preset.label].open),
+        countText: '敬请期待',
+        tools: []
+      }
+      merged.push(section)
+    }
+    section.tools.push(Object.assign({}, tool, { preview: previewMap[tool.key] || '' }))
+    section.countText = `${section.tools.length} 项`
+    renderedKeys[tool.key] = true
+    renderedNames[tool.name] = true
+  })
+
   merged.forEach((section, i) => {
     section.no = i + 1 < 10 ? `0${i + 1}` : String(i + 1)
   })
@@ -278,6 +311,7 @@ Page({
     this.refreshEnglishPreview()
     this.refreshExperiencePreview()
     this.refreshWordsPreview()
+    this.refreshSalaryPreview()
     // 取到站点最新节假日数据后，用真实数据刷新预览
     holidayLoader.load().then(({ index }) => this.refreshPreview(index))
   },
@@ -291,6 +325,7 @@ Page({
     this.refreshEnglishPreview()
     this.refreshExperiencePreview()
     this.refreshWordsPreview()
+    this.refreshSalaryPreview()
   },
 
   // 前三个工具的预览完全由本机 JS 计算，不请求任何网页
@@ -478,6 +513,11 @@ Page({
   // 背单词预览：词库与成绩都在本机，直接读统计，不发起请求
   refreshWordsPreview() {
     this.setPreview('words', ieltsGame.previewText())
+  },
+
+  // 薪酬计算器预览：年薪与口径都存在本机，直接换算每秒金额
+  refreshSalaryPreview() {
+    this.setPreview('salary', salaryCalc.previewText())
   },
 
   // 点击分类标题展开 / 收起该组工具；各组独立，默认全部收起

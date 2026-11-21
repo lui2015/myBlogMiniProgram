@@ -5,6 +5,7 @@
     "pages/detail/detail",
     "pages/tools/tools",
     "pages/workday/workday",
+    "pages/salary/salary",
     "pages/countdown/countdown",
     "pages/ruler/ruler",
     "pages/thinking/thinking",

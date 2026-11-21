@@ -1,0 +1,97 @@
+<view class="page">
+  <view class="hero">
+    <view class="hero-kicker">WORK · 01</view>
+    <view class="hero-title">薪酬计算器</view>
+    <view class="hero-sub">// 输入年薪或月薪 · 看看每秒赚多少</view>
+  </view>
+
+  <view class="panel">
+    <view class="section-en">YOUR SALARY</view>
+    <view class="input-row">
+      <text class="input-label">年薪</text>
+      <input
+        class="amount-input"
+        type="digit"
+        value="{{yearlyInput}}"
+        data-field="yearly"
+        bindinput="onAmountInput"
+        placeholder="例如 200000"
+        placeholder-class="input-placeholder" />
+      <text class="input-unit">元 / 年</text>
+    </view>
+    <view class="input-row">
+      <text class="input-label">月薪</text>
+      <input
+        class="amount-input"
+        type="digit"
+        value="{{monthlyInput}}"
+        data-field="monthly"
+        bindinput="onAmountInput"
+        placeholder="例如 16666.67"
+        placeholder-class="input-placeholder" />
+      <text class="input-unit">元 / 月</text>
+    </view>
+    <view class="input-hint">两栏联动：改年薪自动折算月薪，改月薪按 12 个月折算年薪。默认 20 万为示例值，改成你的即可。</view>
+
+    <view class="section-en mode-title">CALCULATION BASIS</view>
+    <view class="mode-row">
+      <view
+        wx:for="{{modes}}"
+        wx:for-item="m"
+        wx:key="key"
+        class="mode-btn {{mode === m.key ? 'active' : ''}}"
+        data-mode="{{m.key}}"
+        bindtap="onModeTap">
+        <text class="mode-name">{{m.name}}</text>
+        <text class="mode-hint">{{m.hint}}</text>
+      </view>
+    </view>
+    <view class="input-hint">当前口径：{{modeHint}}。仅作趣味估算，不代表实际发薪节奏或税后收入。</view>
+  </view>
+
+  <view class="section-head">
+    <text class="section-en">PER UNIT</text>
+    <text class="section-cn">单位时间薪酬</text>
+  </view>
+
+  <view class="rate-grid">
+    <view class="rate-cell">
+      <text class="rate-label">每天</text>
+      <text class="rate-value">{{perDay}}</text>
+    </view>
+    <view class="rate-cell">
+      <text class="rate-label">每时</text>
+      <text class="rate-value">{{perHour}}</text>
+    </view>
+    <view class="rate-cell">
+      <text class="rate-label">每分</text>
+      <text class="rate-value">{{perMinute}}</text>
+    </view>
+    <view class="rate-cell">
+      <text class="rate-label">每秒</text>
+      <text class="rate-value">{{perSecond}}</text>
+    </view>
+  </view>
+
+  <view class="live-card">
+    <view class="live-top">
+      <text class="live-eyebrow">LIVE EARNINGS · {{running ? '计时中' : '已暂停'}}</text>
+      <text class="live-clock">{{elapsed}}</text>
+    </view>
+    <view class="live-amount">{{earned}}</view>
+    <view class="live-sub">按 {{perSecond}} / 秒持续累计 · 切到后台也不会停</view>
+    <view class="live-actions">
+      <view class="live-btn" bindtap="toggleTimer">{{running ? '暂停' : '继续'}}</view>
+      <view class="live-btn ghost" bindtap="resetTimer">重新计时</view>
+      <view class="live-btn ghost" bindtap="backToTools">返回工具</view>
+    </view>
+  </view>
+
+  <view class="foot-note">金额只存本机，不联网、不上传；实时累计按当前口径与经过的真实时间计算，离开页面后重新进入会从 0 开始。</view>
+  <button class="share-entry" open-type="share" hover-class="share-entry-hover">
+    <text class="share-icon">↗</text>
+    <text class="share-main">转发给朋友</text>
+    <text class="share-sub">SHARE</text>
+    <text class="share-arrow">→</text>
+  </button>
+</view>
