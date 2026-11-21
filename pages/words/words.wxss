@@ -37,84 +37,146 @@ page {
   color: #8d95ad;
 }
 
-.stat-bar {
+/* 每次进入随机展示的单词卡 */
+.daily-card {
+  padding: 34rpx 30rpx 30rpx;
+  border: 1rpx solid rgba(61, 220, 151, 0.3);
+  border-radius: 24rpx;
+  background: linear-gradient(150deg, rgba(61, 220, 151, 0.14), rgba(14, 22, 40, 0.92));
+  box-shadow: 0 12rpx 36rpx rgba(0, 0, 0, 0.22);
+}
+
+.daily-top {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  padding: 18rpx 22rpx;
-  margin-bottom: 30rpx;
-  border: 1rpx solid rgba(61, 220, 151, 0.16);
-  border-radius: 14rpx;
-  background: rgba(255, 255, 255, 0.03);
-  font-size: 21rpx;
-  color: #a7b0c6;
 }
 
-/* 进度 */
-.progress-row {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 14rpx;
-  font-size: 22rpx;
-  color: #a7b0c6;
-}
-
-.progress-track {
-  height: 8rpx;
-  margin-bottom: 30rpx;
-  border-radius: 8rpx;
-  background: rgba(255, 255, 255, 0.08);
-  overflow: hidden;
-}
-
-.progress-fill {
-  height: 100%;
-  border-radius: 8rpx;
-  background: linear-gradient(90deg, #3ddc97, #00d4ff);
-  transition: width 0.25s ease;
-}
-
-/* 单词卡 */
-.word-card {
-  padding: 46rpx 32rpx 40rpx;
-  border: 1rpx solid rgba(61, 220, 151, 0.28);
-  border-radius: 22rpx;
-  background: linear-gradient(145deg, rgba(61, 220, 151, 0.12), rgba(14, 22, 40, 0.9));
-  box-shadow: 0 12rpx 36rpx rgba(0, 0, 0, 0.25);
-  text-align: center;
-}
-
-.word-pos {
-  display: block;
-  font-size: 22rpx;
+.daily-eyebrow {
+  font-size: 19rpx;
   letter-spacing: 2rpx;
   color: #3ddc97;
 }
 
-.word-text {
-  display: block;
-  margin: 18rpx 0 10rpx;
-  font-size: 70rpx;
-  font-weight: 800;
-  letter-spacing: 1rpx;
-  word-break: break-all;
-}
-
-.word-phonetic {
-  display: block;
-  font-size: 26rpx;
-  color: #a7b0c6;
-}
-
-.word-copy {
-  display: inline-block;
-  margin-top: 26rpx;
-  padding: 10rpx 24rpx;
+.daily-shuffle {
+  padding: 8rpx 20rpx;
   border: 1rpx solid rgba(61, 220, 151, 0.35);
   border-radius: 999rpx;
   font-size: 20rpx;
   color: #3ddc97;
 }
 
+.daily-word {
+  display: block;
+  margin-top: 26rpx;
+  font-size: 68rpx;
+  font-weight: 800;
+  letter-spacing: 1rpx;
+  word-break: break-all;
+}
+
+.daily-phonetic {
+  display: block;
+  margin-top: 6rpx;
+  font-size: 24rpx;
+  color: #a7b0c6;
+}
+
+.daily-meaning {
+  display: block;
+  margin-top: 18rpx;
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #eef2ff;
+}
+
+.daily-tags {
+  display: flex;
+  gap: 12rpx;
+  margin-top: 18rpx;
+}
+
+.daily-tag {
+  padding: 6rpx 18rpx;
+  border-radius: 999rpx;
+  background: rgba(61, 220, 151, 0.14);
+  font-size: 19rpx;
+  color: #3ddc97;
+}
+
+.daily-tag.alt {
+  background: rgba(0, 212, 255, 0.14);
+  color: #00d4ff;
+}
+
+.daily-example {
+  margin-top: 24rpx;
+  padding: 20rpx 22rpx;
+  border-left: 4rpx solid rgba(61, 220, 151, 0.5);
+  border-radius: 0 12rpx 12rpx 0;
+  background: rgba(10, 16, 30, 0.55);
+}
+
+.daily-ex-en {
+  display: block;
+  font-size: 23rpx;
+  line-height: 1.7;
+  color: #dfe6f5;
+}
+
+.daily-ex-zh {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 21rpx;
+  line-height: 1.6;
+  color: #8d95ad;
+}
+
+.daily-copy {
+  display: inline-block;
+  margin-top: 24rpx;
+  padding: 10rpx 26rpx;
+  border: 1rpx solid rgba(61, 220, 151, 0.35);
+  border-radius: 999rpx;
+  font-size: 20rpx;
+  color: #3ddc97;
+}
+
+/* 统计条 */
+.stat-bar {
+  display: flex;
+  margin-top: 26rpx;
+  padding: 22rpx 0;
+  border: 1rpx solid rgba(61, 220, 151, 0.16);
+  border-radius: 16rpx;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.stat-cell {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+  border-right: 1rpx solid rgba(255, 255, 255, 0.07);
+}
+
+.stat-cell:last-child {
+  border-right: none;
+}
+
+.stat-num {
+  font-size: 32rpx;
+  font-weight: 800;
+  color: #3ddc97;
+}
+
+.stat-label {
+  font-size: 19rpx;
+  color: #8d95ad;
+}
+
+/* 区块标题 */
 .section-head {
   display: flex;
   align-items: baseline;
@@ -133,11 +195,211 @@ page {
   color: #8d95ad;
 }
 
+/* 玩法介绍 */
+.type-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+}
+
+.type-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+  width: calc((100% - 16rpx) / 2);
+  box-sizing: border-box;
+  padding: 24rpx 22rpx;
+  border: 1rpx solid rgba(255, 255, 255, 0.08);
+  border-radius: 16rpx;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.type-icon {
+  font-size: 34rpx;
+}
+
+.type-name {
+  font-size: 25rpx;
+  font-weight: 700;
+  color: #eef2ff;
+}
+
+.type-desc {
+  font-size: 20rpx;
+  color: #8d95ad;
+}
+
+/* 开始按钮 */
+.start-actions,
+.result-actions {
+  display: flex;
+  gap: 16rpx;
+  margin-top: 34rpx;
+}
+
+.primary-btn,
+.ghost-btn {
+  flex: 1;
+  height: 88rpx;
+  line-height: 88rpx;
+  text-align: center;
+  border-radius: 16rpx;
+  font-size: 26rpx;
+  font-weight: 700;
+}
+
+.primary-btn {
+  background: linear-gradient(90deg, #3ddc97, #00d4ff);
+  color: #06121a;
+}
+
+.ghost-btn {
+  border: 1rpx solid rgba(255, 255, 255, 0.18);
+  color: #c9d2e6;
+}
+
+.ghost-btn.disabled {
+  opacity: 0.45;
+}
+
+.ghost-btn.wide {
+  flex: 1;
+}
+
+.result-actions.single {
+  margin-top: 16rpx;
+}
+
+.start-hint {
+  margin-top: 20rpx;
+  font-size: 20rpx;
+  line-height: 1.7;
+  color: #7f8aa3;
+}
+
+/* 游戏 HUD */
+.hud {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 22rpx;
+  color: #a7b0c6;
+}
+
+.hud-progress {
+  font-weight: 700;
+  color: #eef2ff;
+}
+
+.hud-lives {
+  color: #ff6b9a;
+  font-size: 26rpx;
+  letter-spacing: 3rpx;
+}
+
+.hud-streak {
+  color: #ffd166;
+}
+
+.hud-score {
+  font-weight: 700;
+  color: #3ddc97;
+}
+
+.progress-track {
+  height: 8rpx;
+  margin: 16rpx 0 30rpx;
+  border-radius: 8rpx;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 8rpx;
+  background: linear-gradient(90deg, #3ddc97, #00d4ff);
+  transition: width 0.25s ease;
+}
+
+/* 题目卡 */
+.quiz-card {
+  padding: 32rpx 28rpx 30rpx;
+  border: 1rpx solid rgba(61, 220, 151, 0.28);
+  border-radius: 22rpx;
+  background: linear-gradient(145deg, rgba(61, 220, 151, 0.1), rgba(14, 22, 40, 0.92));
+  box-shadow: 0 12rpx 36rpx rgba(0, 0, 0, 0.22);
+}
+
+.quiz-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.quiz-type {
+  font-size: 21rpx;
+  font-weight: 700;
+  color: #3ddc97;
+}
+
+.quiz-tag {
+  font-size: 19rpx;
+  color: #8d95ad;
+}
+
+.quiz-title {
+  display: block;
+  margin-top: 18rpx;
+  font-size: 24rpx;
+  color: #c9d2e6;
+}
+
+.quiz-display {
+  display: block;
+  margin-top: 24rpx;
+  line-height: 1.5;
+  color: #ffffff;
+  word-break: break-word;
+}
+
+.quiz-display.word {
+  font-size: 66rpx;
+  font-weight: 800;
+  letter-spacing: 1rpx;
+}
+
+.quiz-display.meaning {
+  font-size: 42rpx;
+  font-weight: 700;
+}
+
+.quiz-display.sentence {
+  font-size: 30rpx;
+  font-weight: 600;
+  line-height: 1.8;
+}
+
+.quiz-sub {
+  display: block;
+  margin-top: 16rpx;
+  font-size: 21rpx;
+  line-height: 1.6;
+  color: #8d95ad;
+}
+
+.quiz-hint {
+  display: block;
+  margin-top: 14rpx;
+  font-size: 20rpx;
+  color: #ffd166;
+}
+
 /* 选项 */
 .options {
   display: flex;
   flex-direction: column;
   gap: 16rpx;
+  margin-top: 26rpx;
 }
 
 .option {
@@ -166,7 +428,9 @@ page {
 }
 
 .option-text {
-  font-size: 28rpx;
+  flex: 1;
+  font-size: 27rpx;
+  line-height: 1.5;
   color: #eef2ff;
 }
 
@@ -192,6 +456,102 @@ page {
 
 .option.dim {
   opacity: 0.42;
+}
+
+/* 拼写题 */
+.spell-box {
+  margin-top: 26rpx;
+  padding: 26rpx;
+  border: 1rpx solid rgba(255, 255, 255, 0.09);
+  border-radius: 18rpx;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.spell-slot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10rpx;
+  min-height: 72rpx;
+}
+
+.slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 62rpx;
+  height: 72rpx;
+  box-sizing: border-box;
+  border-bottom: 3rpx solid rgba(255, 255, 255, 0.18);
+  border-radius: 10rpx 10rpx 0 0;
+  background: rgba(10, 16, 30, 0.55);
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.slot.filled {
+  border-bottom-color: #3ddc97;
+  color: #3ddc97;
+}
+
+.letter-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  margin-top: 26rpx;
+}
+
+.letter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72rpx;
+  height: 72rpx;
+  border: 1rpx solid rgba(61, 220, 151, 0.28);
+  border-radius: 14rpx;
+  background: rgba(61, 220, 151, 0.1);
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #eef2ff;
+}
+
+.letter.used {
+  border-color: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.02);
+  color: #4c556b;
+}
+
+.spell-actions {
+  display: flex;
+  gap: 14rpx;
+  margin-top: 28rpx;
+}
+
+.mini-btn {
+  flex: 1;
+  height: 76rpx;
+  line-height: 76rpx;
+  text-align: center;
+  border-radius: 14rpx;
+  background: linear-gradient(90deg, #3ddc97, #00d4ff);
+  color: #06121a;
+  font-size: 24rpx;
+  font-weight: 700;
+}
+
+.mini-btn.ghost {
+  flex: 0 0 32%;
+  border: 1rpx solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.04);
+  color: #c9d2e6;
+}
+
+.spell-tip {
+  display: block;
+  margin-top: 18rpx;
+  font-size: 19rpx;
+  color: #7f8aa3;
+  text-align: center;
 }
 
 /* 答题反馈 */
@@ -222,10 +582,18 @@ page {
   color: #ff8f8f;
 }
 
+.gain-text {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 20rpx;
+  color: #ffd166;
+}
+
 .feedback-word {
   display: block;
-  margin-top: 14rpx;
+  margin-top: 16rpx;
   font-size: 24rpx;
+  line-height: 1.6;
   color: #dfe6f5;
 }
 
@@ -234,6 +602,14 @@ page {
   margin-top: 10rpx;
   font-size: 22rpx;
   line-height: 1.7;
+  color: #a7b0c6;
+}
+
+.feedback-zh {
+  display: block;
+  margin-top: 6rpx;
+  font-size: 21rpx;
+  line-height: 1.6;
   color: #8d95ad;
 }
 
@@ -249,10 +625,17 @@ page {
   font-weight: 800;
 }
 
+.quit-row {
+  margin-top: 30rpx;
+  font-size: 21rpx;
+  color: #626c85;
+  text-align: center;
+}
+
 /* 结算 */
 .result-card {
-  margin-top: 40rpx;
-  padding: 50rpx 30rpx 36rpx;
+  margin-top: 34rpx;
+  padding: 44rpx 30rpx 36rpx;
   border: 1rpx solid rgba(61, 220, 151, 0.3);
   border-radius: 24rpx;
   background: linear-gradient(150deg, rgba(61, 220, 151, 0.16), rgba(14, 22, 40, 0.92));
@@ -261,21 +644,30 @@ page {
 
 .result-eyebrow {
   font-size: 20rpx;
-  letter-spacing: 4rpx;
+  letter-spacing: 3rpx;
   color: #3ddc97;
 }
 
-.result-score {
+.stars {
+  display: block;
   margin-top: 16rpx;
-  font-size: 110rpx;
+  font-size: 48rpx;
+  letter-spacing: 8rpx;
+  color: #ffd166;
+}
+
+.result-score {
+  margin-top: 10rpx;
+  font-size: 100rpx;
   font-weight: 800;
   line-height: 1.2;
 }
 
-.result-total {
-  font-size: 40rpx;
+.result-unit {
+  margin-left: 10rpx;
+  font-size: 32rpx;
   font-weight: 500;
-  color: #8d95ad;
+  color: #a7b0c6;
 }
 
 .result-label {
@@ -292,9 +684,9 @@ page {
 
 .result-grid {
   display: flex;
-  margin-top: 36rpx;
-  padding-top: 28rpx;
-  border-top: 1rpx solid rgba(255, 255, 255, 0.09);
+  margin-top: 32rpx;
+  padding-top: 26rpx;
+  border-top: 1rpx solid rgba(255, 255, 255, 0.1);
 }
 
 .result-cell {
@@ -305,7 +697,7 @@ page {
 }
 
 .cell-num {
-  font-size: 34rpx;
+  font-size: 32rpx;
   font-weight: 700;
   color: #3ddc97;
 }
@@ -315,8 +707,46 @@ page {
   color: #8d95ad;
 }
 
+/* 掌握进度 */
+.mastery-card {
+  margin-top: 24rpx;
+  padding: 26rpx;
+  border: 1rpx solid rgba(255, 255, 255, 0.08);
+  border-radius: 18rpx;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.mastery-top {
+  display: flex;
+  justify-content: space-between;
+  font-size: 23rpx;
+  color: #c9d2e6;
+}
+
+.mastery-track {
+  height: 12rpx;
+  margin-top: 20rpx;
+  border-radius: 12rpx;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.mastery-fill {
+  height: 100%;
+  border-radius: 12rpx;
+  background: linear-gradient(90deg, #3ddc97, #00d4ff);
+}
+
+.mastery-sub {
+  display: block;
+  margin-top: 14rpx;
+  font-size: 19rpx;
+  color: #7f8aa3;
+}
+
+/* 错词 */
 .wrong-card {
-  margin-top: 26rpx;
+  margin-top: 24rpx;
   padding: 26rpx;
   border: 1rpx solid rgba(255, 255, 255, 0.09);
   border-radius: 18rpx;
@@ -341,33 +771,6 @@ page {
   background: rgba(255, 107, 107, 0.12);
   color: #ff9c9c;
   font-size: 22rpx;
-}
-
-.result-actions {
-  display: flex;
-  gap: 18rpx;
-  margin-top: 36rpx;
-}
-
-.primary-btn,
-.ghost-btn {
-  flex: 1;
-  height: 84rpx;
-  line-height: 84rpx;
-  text-align: center;
-  border-radius: 16rpx;
-  font-size: 26rpx;
-  font-weight: 700;
-}
-
-.primary-btn {
-  background: linear-gradient(90deg, #3ddc97, #00d4ff);
-  color: #06121a;
-}
-
-.ghost-btn {
-  border: 1rpx solid rgba(255, 255, 255, 0.18);
-  color: #c9d2e6;
 }
 
 .foot-note {

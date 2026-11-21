@@ -2,37 +2,82 @@
   <view class="hero">
     <view class="hero-kicker">ENJOYMENT · 05</view>
     <view class="hero-title">背单词</view>
-    <view class="hero-sub">// 随机抽雅思高频词 · 四选一猜释义</view>
+    <view class="hero-sub">// {{total}} 个雅思核心词 · 4 种题型随机挑战</view>
   </view>
 
-  <view class="stat-bar">
-    <text>词库 {{totalWords}} 词</text>
-    <text>最佳 {{best}}/{{roundSize}}</text>
-    <text>已玩 {{played}} 轮</text>
+  <!-- 每次进入页面都会换一个随机词 -->
+  <view wx:if="{{stage !== 'playing' && wordOfMoment}}" class="daily-card">
+    <view class="daily-top">
+      <text class="daily-eyebrow">RANDOM WORD · {{wordOfMoment.index}} / {{total}}</text>
+      <view class="daily-shuffle" bindtap="shuffleWord">↻ 换一个</view>
+    </view>
+    <text class="daily-word">{{wordOfMoment.w}}</text>
+    <text class="daily-phonetic">{{wordOfMoment.p}} · {{wordOfMoment.t}}</text>
+    <text class="daily-meaning">{{wordOfMoment.m}}</text>
+    <view class="daily-tags">
+      <text class="daily-tag">{{wordOfMoment.topic}}</text>
+      <text class="daily-tag alt">{{wordOfMoment.level}}</text>
+    </view>
+    <view class="daily-example">
+      <text class="daily-ex-en">{{wordOfMoment.e}}</text>
+      <text class="daily-ex-zh">{{wordOfMoment.z}}</text>
+    </view>
+    <view class="daily-copy" bindtap="copyWord">复制这个单词</view>
   </view>
 
-  <block wx:if="{{stage === 'playing'}}">
-    <view class="progress-row">
-      <text>第 {{progressText}} 题</text>
-      <text>得分 {{score}} · 连击 {{streak}}</text>
+  <block wx:if="{{stage === 'home'}}">
+    <view class="stat-bar">
+      <view class="stat-cell"><text class="stat-num">{{stats.best}}</text><text class="stat-label">最佳得分</text></view>
+      <view class="stat-cell"><text class="stat-num">{{stats.played}}</text><text class="stat-label">已玩轮数</text></view>
+      <view class="stat-cell"><text class="stat-num">{{stats.masteredCount}}</text><text class="stat-label">已掌握词</text></view>
+      <view class="stat-cell"><text class="stat-num">{{stats.wrongCount}}</text><text class="stat-label">错词本</text></view>
+    </view>
+
+    <view class="section-head">
+      <text class="section-en">FOUR WAYS TO PLAY</text>
+      <text class="section-cn">一轮 10 题，题型随机混搭</text>
+    </view>
+
+    <view class="type-grid">
+      <view class="type-cell" wx:for="{{types}}" wx:for-item="t" wx:key="key">
+        <text class="type-icon">{{t.icon}}</text>
+        <text class="type-name">{{t.name}}</text>
+        <text class="type-desc">{{t.desc}}</text>
+      </view>
+    </view>
+
+    <view class="start-actions">
+      <view class="primary-btn" data-mode="normal" bindtap="onStartTap">开始挑战 →</view>
+      <view class="ghost-btn {{wrongReady ? '' : 'disabled'}}" data-mode="review" bindtap="onStartTap">错词复习 · {{stats.wrongCount}} 词</view>
+    </view>
+    <view class="start-hint">3 颗生命 · 答错扣 1 颗 · 连击与答题速度都会加分；答对的词计入掌握进度，答错的进错词本。</view>
+  </block>
+
+  <block wx:elif="{{stage === 'playing'}}">
+    <view class="hud">
+      <text class="hud-progress">{{progressText}}</text>
+      <text class="hud-lives">{{livesText}}</text>
+      <text class="hud-streak">连击 {{streak}}</text>
+      <text class="hud-score">{{score}} 分</text>
     </view>
     <view class="progress-track">
       <view class="progress-fill" style="width:{{progress}}%"></view>
     </view>
 
-    <view class="word-card">
-      <text class="word-pos">{{question.pos}}</text>
-      <text class="word-text">{{question.word}}</text>
-      <text class="word-phonetic">{{question.phonetic}}</text>
-      <view class="word-copy" bindtap="copyWord">复制单词</view>
+    <view class="quiz-card">
+      <view class="quiz-top">
+        <text class="quiz-type">{{question.typeIcon}} {{question.typeName}}</text>
+        <text class="quiz-tag">{{question.tag}}</text>
+      </view>
+      <text class="quiz-title">{{question.title}}</text>
+      <text wx:if="{{question.type === 'cloze'}}" class="quiz-display sentence">{{question.display}}</text>
+      <text wx:elif="{{question.type === 'meaning'}}" class="quiz-display word">{{question.display}}</text>
+      <text wx:else class="quiz-display meaning">{{question.display}}</text>
+      <text class="quiz-sub">{{question.sub}}</text>
+      <text wx:if="{{question.type === 'spell' && !answered}}" class="quiz-hint">{{question.hint}}</text>
     </view>
 
-    <view class="section-head">
-      <text class="section-en">CHOOSE THE MEANING</text>
-      <text class="section-cn">选出正确的中文释义</text>
-    </view>
-
-    <view class="options">
+    <view wx:if="{{question.type !== 'spell'}}" class="options">
       <view
         wx:for="{{question.options}}"
         wx:for-item="opt"
@@ -46,19 +91,47 @@
       </view>
     </view>
 
+    <block wx:else>
+      <view wx:if="{{!answered}}" class="spell-box">
+        <view class="spell-slot">
+          <view wx:for="{{typed}}" wx:for-item="t" wx:key="id" class="slot filled" data-id="{{t.id}}" bindtap="undoLetter">{{t.ch}}</view>
+          <view wx:for="{{emptySlots}}" wx:for-item="s" wx:key="*this" class="slot"></view>
+        </view>
+        <view class="letter-grid">
+          <view
+            wx:for="{{letters}}"
+            wx:for-item="l"
+            wx:key="id"
+            class="letter {{l.used ? 'used' : ''}}"
+            data-id="{{l.id}}"
+            bindtap="tapLetter">{{l.ch}}</view>
+        </view>
+        <view class="spell-actions">
+          <view class="mini-btn ghost" bindtap="clearLetters">清空</view>
+          <view class="mini-btn" bindtap="confirmSpell">确认拼写</view>
+        </view>
+        <text class="spell-tip">点已填字母可以退回重排</text>
+      </view>
+    </block>
+
     <view wx:if="{{answered}}" class="feedback {{lastCorrect ? 'ok' : 'no'}}">
       <text class="feedback-title">{{feedbackTitle}}</text>
-      <text class="feedback-word">{{question.word}} · {{question.meaning}}</text>
-      <text class="feedback-example">{{question.example}}</text>
+      <text class="gain-text">{{gainText}}</text>
+      <text class="feedback-word">{{feedbackWord}}</text>
+      <text class="feedback-example">{{feedbackExample}}</text>
+      <text class="feedback-zh">{{feedbackZh}}</text>
       <view class="next-btn" bindtap="next">{{nextText}} →</view>
     </view>
+
+    <view class="quit-row" bindtap="quitRound">放弃本轮 · 返回首页</view>
   </block>
 
   <block wx:else>
     <view class="result-card">
-      <view class="result-eyebrow">ROUND COMPLETE</view>
-      <view class="result-score">{{score}}<text class="result-total">/{{round.length}}</text></view>
-      <text class="result-label">本轮答对</text>
+      <view class="result-eyebrow">ROUND COMPLETE · {{mode === 'review' ? '错词复习' : '混合挑战'}}</view>
+      <text class="stars">{{starsText}}</text>
+      <view class="result-score">{{score}}<text class="result-unit">分</text></view>
+      <text class="result-label">本轮得分</text>
       <text wx:if="{{newRecord}}" class="result-record">✦ 刷新最佳成绩</text>
       <view class="result-grid">
         <view class="result-cell">
@@ -70,10 +143,21 @@
           <text class="cell-label">最高连击</text>
         </view>
         <view class="result-cell">
-          <text class="cell-num">{{best}}</text>
-          <text class="cell-label">历史最佳</text>
+          <text class="cell-num">{{fastest}}</text>
+          <text class="cell-label">最快答题</text>
         </view>
       </view>
+    </view>
+
+    <view class="mastery-card">
+      <view class="mastery-top">
+        <text>词库掌握进度</text>
+        <text>{{masteredCount}} / {{total}}</text>
+      </view>
+      <view class="mastery-track">
+        <view class="mastery-fill" style="width:{{masteredPercent}}%"></view>
+      </view>
+      <text class="mastery-sub">答对过的词会计入「已掌握」，进度只存本机</text>
     </view>
 
     <view wx:if="{{wrongWords.length}}" class="wrong-card">
@@ -85,16 +169,18 @@
 
     <view class="result-actions">
       <view class="primary-btn" bindtap="restart">再来一轮</view>
-      <view class="ghost-btn" bindtap="backToTools">返回工具</view>
+      <view class="ghost-btn" bindtap="reviewWrong">错词复习</view>
+    </view>
+    <view class="result-actions single">
+      <view class="ghost-btn wide" bindtap="backToTools">返回工具</view>
     </view>
   </block>
 
-  <view class="foot-note">词库为随包雅思 / 学术英语高频词，随机抽题全程离线；成绩、最佳分与错词只存本机，不上传。</view>
+  <view class="foot-note">词库来自 CC BY 4.0 开源数据集 Word Atlas，随机抽题全程离线；成绩、错词与掌握进度只存本机，不上传。</view>
   <button class="share-entry" open-type="share" hover-class="share-entry-hover">
     <text class="share-icon">↗</text>
     <text class="share-main">转发给朋友</text>
     <text class="share-sub">SHARE</text>
     <text class="share-arrow">→</text>
   </button>
-
 </view>

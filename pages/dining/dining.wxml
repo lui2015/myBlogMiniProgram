@@ -1,0 +1,123 @@
+<view class="page">
+  <view class="hero">
+    <view class="hero-kicker">LIFE · 02</view>
+    <view class="hero-title">点菜助手</view>
+    <view class="hero-sub">// 按人数与场合，算该点几道菜</view>
+  </view>
+
+  <view class="panel">
+    <view class="section-en">PEOPLE / OCCASION</view>
+
+    <view class="people-row">
+      <text class="input-label">人数</text>
+      <view class="step-btn" data-delta="-1" bindtap="stepPeople">−</view>
+      <input
+        class="people-input"
+        type="number"
+        value="{{peopleInput}}"
+        bindinput="onPeopleInput"
+        placeholder="例如 4"
+        placeholder-class="input-placeholder" />
+      <view class="step-btn" data-delta="1" bindtap="stepPeople">＋</view>
+      <text class="input-unit">人 · 最多 {{maxPeople}}</text>
+    </view>
+
+    <view class="quick-row">
+      <view
+        wx:for="{{quickPeople}}"
+        wx:for-item="q"
+        wx:key="*this"
+        class="quick-chip {{people === q ? 'active' : ''}}"
+        data-people="{{q}}"
+        bindtap="onQuickTap">{{q}} 人</view>
+    </view>
+
+    <view class="section-en scene-title">OCCASION</view>
+    <view class="scene-row">
+      <view
+        wx:for="{{scenes}}"
+        wx:for-item="s"
+        wx:key="key"
+        class="scene-btn {{sceneKey === s.key ? 'active' : ''}}"
+        data-key="{{s.key}}"
+        bindtap="onSceneTap">
+        <text class="scene-name">{{s.name}}</text>
+        <text class="scene-hint">{{s.hint}}</text>
+      </view>
+    </view>
+    <view class="input-hint">推荐规则：每桌按「人数 = 热菜数」打底，再按场合加档；超过 10 人自动拆桌，荤素 / 凉菜 / 汤 / 主食分别给数量。</view>
+  </view>
+
+  <block wx:if="{{hasPlan}}">
+    <view class="result-card">
+      <view class="result-eyebrow">RECOMMENDED DISHES</view>
+      <view class="result-number">{{plan.total.all}}<text class="result-unit">道菜</text></view>
+      <text class="result-summary">{{plan.summary}}</text>
+      <text class="result-formula">{{plan.formula}}</text>
+      <view class="result-grid">
+        <view class="result-cell">
+          <text class="cell-num">{{plan.total.hot}}</text>
+          <text class="cell-label">热菜</text>
+        </view>
+        <view class="result-cell">
+          <text class="cell-num">{{plan.total.cold}}</text>
+          <text class="cell-label">凉菜</text>
+        </view>
+        <view class="result-cell">
+          <text class="cell-num">{{plan.total.soup}}</text>
+          <text class="cell-label">汤 / 羹</text>
+        </view>
+        <view class="result-cell">
+          <text class="cell-num">{{plan.total.staple}}</text>
+          <text class="cell-label">主食</text>
+        </view>
+      </view>
+      <view wx:if="{{plan.tables > 1}}" class="table-note">拆成 {{plan.tables}} 桌 · 每桌约 {{plan.tablePeople}} 人 · 每桌 {{plan.perTablePlan.all}} 道菜，各桌照同一份清单点</view>
+    </view>
+
+    <view class="section-head">
+      <text class="section-en">HOW TO ORDER</text>
+      <text class="section-cn">具体怎么点</text>
+    </view>
+
+    <view class="category-list">
+      <view class="category-row" wx:for="{{categories}}" wx:for-item="c" wx:key="key">
+        <view class="category-top">
+          <text class="category-name">{{c.name}}</text>
+          <text class="category-count {{c.count ? '' : 'zero'}}">{{c.countText}}</text>
+        </view>
+        <text class="category-hint">{{c.hint}}</text>
+      </view>
+    </view>
+
+    <view class="section-head">
+      <text class="section-en">PAIRING RULES</text>
+      <text class="section-cn">搭配原则</text>
+    </view>
+
+    <view class="tips-card">
+      <view class="tip-row" wx:for="{{tips}}" wx:for-item="tip" wx:key="no">
+        <text class="tip-no">{{tip.no}}</text>
+        <text class="tip-text">{{tip.text}}</text>
+      </view>
+    </view>
+
+    <view class="actions">
+      <view class="primary-btn" bindtap="copyPlan">复制点菜清单</view>
+      <view class="ghost-btn" bindtap="backToTools">返回工具</view>
+    </view>
+  </block>
+
+  <view wx:else class="empty-card">
+    <text class="empty-title">先填人数</text>
+    <text class="empty-text">输入 1 ~ {{maxPeople}} 人的整数，或点上面的快捷人数，就会给出菜数与点菜清单。</text>
+  </view>
+
+  <view class="foot-note">推荐为通用经验估算，不针对具体餐厅菜单与份量；人数与场合只存本机，不联网、不上传。</view>
+  <button class="share-entry" open-type="share" hover-class="share-entry-hover">
+    <text class="share-icon">↗</text>
+    <text class="share-main">转发给朋友</text>
+    <text class="share-sub">SHARE</text>
+    <text class="share-arrow">→</text>
+  </button>
+</view>

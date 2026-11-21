@@ -9,6 +9,7 @@ const englishApi = require('../../utils/englishApi')
 const api = require('../../utils/api')
 const ieltsGame = require('../../utils/ieltsGame')
 const salaryCalc = require('../../utils/salary')
+const dining = require('../../utils/dining')
 
 const STORAGE_KEY = 'countdown_events_v1'
 // 上次成功同步的工具配置，接口不可用时离线兜底
@@ -67,6 +68,16 @@ const TOOLS = [
     path: '/pages/ruler/ruler'
   },
   {
+    key: 'dining',
+    group: 'life',
+    icon: '🍽️',
+    name: '点菜助手',
+    desc: '按人数与场合算出该点几道菜：荤素热菜、凉菜、汤与主食分别给数量，附点菜顺序与搭配原则，可一键复制清单。',
+    tag: '本机计算',
+    preview: '',
+    path: '/pages/dining/dining'
+  },
+  {
     key: 'thinking',
     group: 'thought',
     icon: '🧠',
@@ -111,8 +122,8 @@ const TOOLS = [
     group: 'enjoyment',
     icon: '🎴',
     name: '背单词',
-    desc: '随机抽雅思高频词，四选一猜中文释义，10 题一轮：连击计分、即时例句、错词回顾，离线也能玩。',
-    tag: '本机词库',
+    desc: '每次进入随机认识一个雅思核心词；3000 词库四种题型混搭（释义选择 / 看义选词 / 例句填空 / 字母拼写），3 颗生命、连击与速度加分、错词本复习与掌握进度，离线也能玩。',
+    tag: '3000 词库',
     preview: '',
     path: '/pages/words/words'
   }
@@ -159,23 +170,43 @@ function safeRoute(route) {
   return /^\/pages\/[A-Za-z0-9_/-]+$/.test(value) ? value : ''
 }
 
-// 默认接口只返回 visibleOnly 的分组，后台隐藏的分组 / 工具不会出现。
-// 用 ?all=1 的全量配置判断「后台是否已经收录过」：收录过（哪怕隐藏或留空）就完全以接口为准；
-// 后台从未收录过的本地新工具才补到对应分组——分组已渲染就追加，分组没渲染且后台也没建过才新建。
-// 全量配置拿不到时不补充，隐藏优先。
-function mergeLocalGroups(sections, prevSections, allGroups) {
-  if (!Array.isArray(allGroups)) return sections
-  const backendGroups = {}
-  const backendTools = {}
+// ===== 本地工具显示判定：所有工具（含以后新增的）统一走这一套，禁止单独加显示开关 =====
+// 每次进入页面并发请求 GET /api/miniprogram/tools（visibleOnly，决定渲染）与
+// GET /api/miniprogram/tools?all=1（visibleOnly=false，含隐藏项，只用于判重）。
+//   hidden     后台已收录并隐藏（工具 enabled:false 或所在分组 enabled:false）→ 隐藏
+//   configured 后台已收录且可见 → 已由 visibleOnly 接口渲染，本地不重复补
+//   missing    后台从未收录 → 默认展示：补进同名分组，分组未渲染且后台也没建过才新建
+//   unknown    拿不到全量配置 → 无法区分「没建过」与「隐藏了」，一律不补（隐藏优先）
+// 新增工具只需在 TOOLS 注册表加一项，不需要、也不允许另写显示 / 隐藏开关。
+function backendToolState(name, allGroups) {
+  if (!Array.isArray(allGroups)) return 'unknown'
+  let state = 'missing'
   allGroups.forEach(group => {
     if (!group) return
-    const label = String(group.name || '').trim().toUpperCase()
-    if (label) backendGroups[label] = true
     ;(Array.isArray(group.tools) ? group.tools : []).forEach(tool => {
-      const name = String((tool && tool.name) || '').trim()
-      if (name) backendTools[name] = true
+      if (String((tool && tool.name) || '').trim() !== name) return
+      if (group.enabled === false || (tool && tool.enabled === false)) state = 'hidden'
+      else if (state !== 'hidden') state = 'configured'
     })
   })
+  return state
+}
+
+function backendGroupState(label, allGroups) {
+  if (!Array.isArray(allGroups)) return 'unknown'
+  const target = String(label || '').trim().toUpperCase()
+  let state = 'missing'
+  allGroups.forEach(group => {
+    if (String((group && group.name) || '').trim().toUpperCase() !== target) return
+    if (group.enabled === false) state = 'hidden'
+    else if (state !== 'hidden') state = 'configured'
+  })
+  return state
+}
+
+function mergeLocalGroups(sections, prevSections, allGroups) {
+  // 全量配置拿不到时无法区分「后台没建过」与「后台隐藏了」，一律不补（隐藏优先）
+  if (!Array.isArray(allGroups)) return sections
 
   const merged = sections.slice()
   const prevByLabel = {}
@@ -198,13 +229,15 @@ function mergeLocalGroups(sections, prevSections, allGroups) {
   })
 
   TOOLS.forEach(tool => {
-    if (renderedKeys[tool.key] || renderedNames[tool.name] || backendTools[tool.name]) return
+    // 接口已渲染的不重复补；后台收录过（可见 / 隐藏）完全以接口为准；从未收录才默认展示
+    if (renderedKeys[tool.key] || renderedNames[tool.name]) return
+    if (backendToolState(tool.name, allGroups) !== 'missing') return
     const preset = GROUPS.find(group => group.key === tool.group)
     if (!preset) return
     let section = merged.find(item => labelOf(item) === preset.label)
     if (!section) {
       // 后台建过该分组却没渲染 = 后台隐藏了它，不补
-      if (backendGroups[preset.label]) return
+      if (backendGroupState(preset.label, allGroups) !== 'missing') return
       section = {
         key: `local_${preset.key}`,
         label: preset.label,
@@ -312,6 +345,7 @@ Page({
     this.refreshExperiencePreview()
     this.refreshWordsPreview()
     this.refreshSalaryPreview()
+    this.refreshDiningPreview()
     // 取到站点最新节假日数据后，用真实数据刷新预览
     holidayLoader.load().then(({ index }) => this.refreshPreview(index))
   },
@@ -326,6 +360,7 @@ Page({
     this.refreshExperiencePreview()
     this.refreshWordsPreview()
     this.refreshSalaryPreview()
+    this.refreshDiningPreview()
   },
 
   // 前三个工具的预览完全由本机 JS 计算，不请求任何网页
@@ -365,11 +400,18 @@ Page({
   },
 
   // 显示 / 隐藏完全由站点接口控制（文档 4.12 / 6.5）：visibleOnly 决定渲染，
-  // ?all=1 的全量配置只用来判断后台是否已收录某个分组 / 工具，避免把隐藏项补回来
+  // ?all=1 的全量配置只用来判断后台是否已收录某个分组 / 工具，避免把隐藏项补回来。
+  // 全量配置临时失败时重试一次，避免一次网络抖动让新工具无法按后台配置判定
+  fetchAllTools() {
+    return api.getMiniProgramToolsAll()
+      .catch(() => api.getMiniProgramToolsAll())
+      .catch(() => null)
+  },
+
   syncTools() {
     return Promise.all([
       api.getMiniProgramTools(),
-      api.getMiniProgramToolsAll().catch(() => null)
+      this.fetchAllTools()
     ])
       .then(results => {
         const res = results[0]
@@ -518,6 +560,11 @@ Page({
   // 薪酬计算器预览：年薪与口径都存在本机，直接换算每秒金额
   refreshSalaryPreview() {
     this.setPreview('salary', salaryCalc.previewText())
+  },
+
+  // 点菜助手预览：上次的人数与场合都存在本机，直接换算建议菜数
+  refreshDiningPreview() {
+    this.setPreview('dining', dining.previewText())
   },
 
   // 点击分类标题展开 / 收起该组工具；各组独立，默认全部收起
