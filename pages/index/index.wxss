@@ -293,14 +293,6 @@
   color: #00d4ff;
 }
 
-.guide-tip {
-  display: block;
-  margin-top: 18rpx;
-  font-size: 19rpx;
-  color: #5a5a6a;
-  text-align: center;
-}
-
 /* ====== 通用四角装饰 ====== */
 .corner {
   position: absolute;

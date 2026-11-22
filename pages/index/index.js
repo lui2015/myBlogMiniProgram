@@ -1,4 +1,5 @@
 const api = require('../../utils/api')
+const share = require('../../utils/share')
 const { resolveUrl, resolveFields, resolveCoverFields, DEFAULT_COVER } = require('../../utils/util')
 const config = require('../../utils/config')
 const categories = require('../../utils/categories')
@@ -56,6 +57,8 @@ Page({
   },
 
   onShow() {
+    // 页面级再确认一次转发菜单已开启（启动阶段调用在部分机型上会失效）
+    share.enableShareMenu()
     // 切回首页时静默刷新相框，后台更新相册后无需重新编译
     if (this.hasShown) this.loadAlbums()
     this.hasShown = true

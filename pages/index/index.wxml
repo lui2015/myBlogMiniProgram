@@ -58,8 +58,6 @@
         </view>
       </view>
     </scroll-view>
-
-    <text class="guide-tip">{{guides.length}} 个内容分类 · 左右滑动查看 · 点击卡片进入对应作品页</text>
   </view>
 
   <!-- ====== 照片 PHOTO FRAME ====== -->
