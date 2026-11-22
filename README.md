@@ -253,11 +253,11 @@
 
 ## 转发给朋友
 
-全站 27 个页面都实现了 `onShareAppMessage`，`app.js` 在 `onLaunch` / `onShow` 与首页 `onShow` 都调用 `utils/share.js` 的 `enableShareMenu()`（等价于 `wx.showShareMenu({ withShareTicket: true, menus: ['shareAppMessage'] })`），避免部分机型在启动阶段调用不生效；调用结果与运行版本会打到 Console 的 `[share]` 日志。每个页面底部另有统一的「转发给朋友」按钮（`<button open-type="share">`，样式在 `app.wxss`），点击直接拉起好友选择，不必依赖右上角菜单；尺子全屏测量时隐藏该按钮，避免遮挡刻度。
+全站 27 个页面都实现了 `onShareAppMessage`，`app.js` 在 `onLaunch` / `onShow` 与首页 `onShow` 都调用 `utils/share.js` 的 `enableShareMenu()`（等价于 `wx.showShareMenu({ withShareTicket: true, menus: ['shareAppMessage'] })`），避免部分机型在启动阶段调用不生效；调用结果与运行版本会打到 Console 的 `[share]` 日志。除工具列表页外，每个页面底部另有统一的「转发给朋友」按钮（`<button open-type="share">`，样式在 `app.wxss`），点击直接拉起好友选择，不必依赖右上角菜单；尺子全屏测量时隐藏该按钮，避免遮挡刻度。工具列表页（`pages/tools/tools`）不展示该按钮，但保留 `onShareAppMessage`，右上角菜单仍可转发。
 
 **代码只负责「具备转发能力」**，胶囊菜单是否可用还受微信侧约束。若「···」里「转发给朋友」仍是灰色，按下面顺序排查：
 
-1. **先确认跑的是哪一个版本**：真机调试 Console 看 `[share] ... envVersion=...`。`develop`（开发版）/ `trial`（体验版）下微信可能置灰右上角转发，且本地或 GitHub 上的新代码**不会自动出现在正式版**——需要在微信开发者工具「上传」→ 公众平台设为体验版 → 提交审核 → 发布，正式版才会更新。用页面底部「转发给朋友」按钮可以先验证代码是否生效。
+1. **先确认跑的是哪一个版本**：真机调试 Console 看 `[share] ... envVersion=...`。`develop`（开发版）/ `trial`（体验版）下微信可能置灰右上角转发，且本地或 GitHub 上的新代码**不会自动出现在正式版**——需要在微信开发者工具「上传」→ 公众平台设为体验版 → 提交审核 → 发布，正式版才会更新。在其它页面（如首页）底部的「转发给朋友」按钮可以先验证代码是否生效。
 2. **确认账号状态**：登录微信公众平台查看小程序备案 / 年审是否完成、有无违规通知或能力限制；未备案、年审过期或被限制传播时，微信会直接置灰转发入口，代码无法覆盖。
 3. **确认运行环境**：升级微信客户端与开发者工具基础库（低于 2.11.3 会忽略 `menus` 参数），用真机而非开发者工具模拟器验证。
 4. 排除 `wx.hideShareMenu()`：项目里没有任何隐藏分享菜单的调用，全局只开启、不关闭。
